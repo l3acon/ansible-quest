@@ -1376,27 +1376,38 @@ var MedievalKingdom = (function () {
   // ─── Lighting ───
 
   function addLighting() {
-    scene.add(new THREE.AmbientLight(0x1a1830, 0.8));
+    // Stronger ambient for WC2 visibility
+    scene.add(new THREE.AmbientLight(0x2a2840, 1.2));
 
-    // Moonlight — cool blue
-    var moon = new THREE.DirectionalLight(0x4466aa, 0.4);
+    // Moonlight — brighter cool blue
+    var moon = new THREE.DirectionalLight(0x6688cc, 0.7);
     moon.position.set(-40, 60, 30);
     scene.add(moon);
 
-    scene.add(new THREE.HemisphereLight(0x0a1020, 0x050810, 0.3));
+    // Secondary fill light from opposite side
+    var fill = new THREE.DirectionalLight(0x334466, 0.3);
+    fill.position.set(40, 40, -20);
+    scene.add(fill);
 
-    // District torchlight glow
+    scene.add(new THREE.HemisphereLight(0x1a2838, 0x0a1510, 0.5));
+
+    // District torchlight glow — stronger
     Object.keys(districts).forEach(function (k) {
       var d = districts[k];
-      var pl = new THREE.PointLight(d.accent, 2.5, 40, 1.5);
+      var pl = new THREE.PointLight(d.accent, 3.5, 45, 1.5);
       pl.position.set(d.group.position.x, 12, d.group.position.z);
       scene.add(pl);
     });
 
-    // General warm ground lights
-    var warmLight = new THREE.PointLight(0xff9933, 1.5, 80, 2);
-    warmLight.position.set(0, 8, 5);
+    // General warm ground lights — wider, brighter
+    var warmLight = new THREE.PointLight(0xff9933, 2.5, 100, 1.8);
+    warmLight.position.set(0, 10, 5);
     scene.add(warmLight);
+
+    // Additional ground fill
+    var groundFill = new THREE.PointLight(0x88aa66, 1.0, 120, 2);
+    groundFill.position.set(0, 3, 10);
+    scene.add(groundFill);
   }
 
   // ─── Fireflies ───
@@ -1454,96 +1465,29 @@ var MedievalKingdom = (function () {
   // ─── Traffic (Medieval) ───
 
   function addTraffic() {
-    addDragon({ altitude: 32, speed: 0.12, cx: 0, cz: -5, rx: 55, rz: 35, phase: 0, color: 0x8b0000, wingColor: 0xaa2222 });
-    addDragon({ altitude: 40, speed: -0.08, cx: 5, cz: 0, rx: 60, rz: 25, phase: Math.PI * 0.7, color: 0x006400, wingColor: 0x228b22 });
-
-    addWagonTrain({ z: 14, y: 0.3, speed: 4, wagons: 4, color: 0x5a4a30 });
+    addWagonTrain({ z: 14, y: 0.3, speed: 4, wagons: 4, color: 0x7a6a40 });
     addStoneBridge(14);
 
-    addOgre({ road: "v", x: -28.4, speed: -3.5, phase: 10, color: 0x3a6b2a });
-    addOgre({ road: "v", x: -27.6, speed:  4,   phase: -15, color: 0x4a7b3a });
-    addOgre({ road: "v", x:  0.4,  speed:  4,   phase: 5,   color: 0x5a3a2a });
-    addOgre({ road: "v", x: -0.4,  speed: -3,   phase: -10, color: 0x3a5a2a });
-    addOgre({ road: "v", x: 28.4,  speed: -3,   phase: 0,   color: 0x6a4a2a });
-    addOgre({ road: "v", x: 27.6,  speed:  4.5, phase: -18, color: 0x4a5a1a });
+    // Bigger, meaner ogres — clearly visible on the roads
+    addOgre({ road: "v", x: -28.5, speed: -2.5, phase: 10, color: 0x4aaa2a });
+    addOgre({ road: "v", x: -27.5, speed:  3,   phase: -15, color: 0x5abb3a });
+    addOgre({ road: "v", x:  0.5,  speed:  3,   phase: 5,   color: 0x5aaa2a });
+    addOgre({ road: "v", x: -0.5,  speed: -2.5, phase: -10, color: 0x3aaa3a });
+    addOgre({ road: "v", x: 28.5,  speed: -2.5, phase: 0,   color: 0x6aaa2a });
+    addOgre({ road: "v", x: 27.5,  speed:  3,   phase: -18, color: 0x4abb1a });
 
-    addKnights();
     addCatapult();
   }
 
-  // ─── Dragon ───
-
-  function addDragon(cfg) {
-    var g = new THREE.Group();
-    var bodyMat = new THREE.MeshStandardMaterial({
-      color: cfg.color, emissive: new THREE.Color(cfg.color), emissiveIntensity: 0.4,
-      roughness: 0.5, metalness: 0.3,
-    });
-    var wingMat = new THREE.MeshStandardMaterial({
-      color: cfg.wingColor, emissive: new THREE.Color(cfg.wingColor), emissiveIntensity: 0.3,
-      roughness: 0.6, metalness: 0.2, transparent: true, opacity: 0.8, side: THREE.DoubleSide,
-    });
-
-    // Body
-    var body = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 3.0, 6), bodyMat);
-    body.rotation.z = Math.PI / 2;
-    g.add(body);
-
-    // Head
-    var head = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.8, 6), bodyMat);
-    head.rotation.z = -Math.PI / 2;
-    head.position.set(1.8, 0.1, 0);
-    g.add(head);
-
-    // Eyes
-    var eyeMat = new THREE.MeshBasicMaterial({ color: 0xff4400 });
-    var eye1 = new THREE.Mesh(new THREE.SphereGeometry(0.06, 4, 4), eyeMat);
-    eye1.position.set(1.5, 0.2, 0.15);
-    g.add(eye1);
-    var eye2 = eye1.clone();
-    eye2.position.z = -0.15;
-    g.add(eye2);
-
-    // Wings (animated)
-    var wingGeo = new THREE.PlaneGeometry(1.8, 3.5);
-    var wingL = new THREE.Mesh(wingGeo, wingMat);
-    wingL.position.set(-0.2, 0.3, 1.8);
-    wingL.rotation.x = 0.2;
-    wingL.userData._isWing = true;
-    wingL.userData._wingDir = 1;
-    g.add(wingL);
-
-    var wingR = new THREE.Mesh(wingGeo, wingMat);
-    wingR.position.set(-0.2, 0.3, -1.8);
-    wingR.rotation.x = -0.2;
-    wingR.userData._isWing = true;
-    wingR.userData._wingDir = -1;
-    g.add(wingR);
-
-    // Tail
-    var tail = new THREE.Mesh(new THREE.ConeGeometry(0.12, 1.5, 4), bodyMat);
-    tail.rotation.z = Math.PI / 2;
-    tail.position.set(-2.0, 0, 0);
-    g.add(tail);
-
-    // Fire breath glow
-    var fireGlow = new THREE.PointLight(0xff4400, 1, 8, 2);
-    fireGlow.position.set(2.0, 0, 0);
-    g.add(fireGlow);
-
-    scene.add(g);
-    traffic.push({ type: "dragon", mesh: g, cfg: cfg });
-  }
-
-  // ─── Stone Bridge (replacing monorail track) ───
+  // ─── Stone Bridge ───
 
   function addStoneBridge(z) {
     var trackLen = 140;
     var pillarSpacing = 10;
 
     var bridgeMat = new THREE.MeshStandardMaterial({
-      color: 0x4a4a3a, roughness: 0.85, metalness: 0.1,
-      emissive: new THREE.Color(0x2a2a20), emissiveIntensity: 0.2,
+      color: 0x8a8070, roughness: 0.8, metalness: 0.1,
+      emissive: new THREE.Color(0x3a3530), emissiveIntensity: 0.25,
     });
 
     // Main bridge deck
@@ -1597,7 +1541,7 @@ var MedievalKingdom = (function () {
 
   function addWagonTrain(cfg) {
     var g = new THREE.Group();
-    var woodMat = new THREE.MeshStandardMaterial({ color: cfg.color, roughness: 0.8, metalness: 0.1 });
+    var woodMat = new THREE.MeshStandardMaterial({ color: cfg.color, roughness: 0.75, metalness: 0.1, emissive: new THREE.Color(cfg.color).multiplyScalar(0.15), emissiveIntensity: 1 });
     var metalMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.6, roughness: 0.4 });
 
     // Lead horses (2)
@@ -1695,63 +1639,104 @@ var MedievalKingdom = (function () {
     return g;
   }
 
-  // ─── Ogres ───
+  // ─── Ogres — big, stompy, Warcraft-style ───
 
   function addOgre(cfg) {
     var g = new THREE.Group();
     var skinColor = new THREE.Color(cfg.color);
     var mat = new THREE.MeshStandardMaterial({
-      color: skinColor, roughness: 0.8, metalness: 0.1,
-      emissive: skinColor.clone().multiplyScalar(0.15), emissiveIntensity: 1,
+      color: skinColor, roughness: 0.7, metalness: 0.05,
+      emissive: skinColor.clone().multiplyScalar(0.2), emissiveIntensity: 1,
+    });
+    var darkMat = new THREE.MeshStandardMaterial({
+      color: skinColor.clone().multiplyScalar(0.7), roughness: 0.8, metalness: 0.05,
     });
 
-    // Body
-    var body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.9, 0.5), mat);
-    body.position.y = 0.7;
+    // Barrel body — thicc
+    var body = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.8, 1.6, 8), mat);
+    body.position.y = 1.4;
     g.add(body);
 
-    // Head
-    var head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 6, 6), mat);
-    head.position.y = 1.35;
+    // Shoulders
+    var shoulder = new THREE.Mesh(new THREE.SphereGeometry(0.55, 6, 6), mat);
+    shoulder.position.y = 2.3;
+    shoulder.scale.set(1.4, 0.6, 1.0);
+    g.add(shoulder);
+
+    // Head — big underbite face
+    var head = new THREE.Mesh(new THREE.SphereGeometry(0.5, 6, 6), mat);
+    head.position.y = 2.8;
     g.add(head);
 
-    // Eyes
-    var eyeMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-    var eye1 = new THREE.Mesh(new THREE.SphereGeometry(0.05, 4, 4), eyeMat);
-    eye1.position.set(0.12, 1.4, 0.22);
+    // Jaw/underbite
+    var jaw = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.2, 0.35), darkMat);
+    jaw.position.set(0, 2.55, 0.35);
+    g.add(jaw);
+
+    // Eyes — glowing yellow-red
+    var eyeMat = new THREE.MeshBasicMaterial({ color: 0xff6600 });
+    var eye1 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 5, 5), eyeMat);
+    eye1.position.set(0.2, 2.9, 0.4);
     g.add(eye1);
     var eye2 = eye1.clone();
-    eye2.position.x = -0.12;
+    eye2.position.x = -0.2;
     g.add(eye2);
 
-    // Arms
-    var armGeo = new THREE.BoxGeometry(0.15, 0.6, 0.15);
+    // Tusks
+    var tuskMat = new THREE.MeshStandardMaterial({ color: 0xeeeecc, roughness: 0.5, metalness: 0.3 });
+    var tusk1 = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.3, 4), tuskMat);
+    tusk1.position.set(0.18, 2.6, 0.45);
+    tusk1.rotation.x = -0.3;
+    g.add(tusk1);
+    var tusk2 = tusk1.clone();
+    tusk2.position.x = -0.18;
+    g.add(tusk2);
+
+    // Arms — big hanging
+    var armGeo = new THREE.CylinderGeometry(0.18, 0.22, 1.2, 6);
     var armL = new THREE.Mesh(armGeo, mat);
-    armL.position.set(0.45, 0.6, 0);
-    armL.rotation.z = -0.2;
+    armL.position.set(0.9, 1.6, 0);
+    armL.rotation.z = -0.25;
     g.add(armL);
     var armR = armL.clone();
-    armR.position.x = -0.45;
-    armR.rotation.z = 0.2;
+    armR.position.x = -0.9;
+    armR.rotation.z = 0.25;
     g.add(armR);
 
-    // Legs
-    var legGeo = new THREE.BoxGeometry(0.18, 0.4, 0.18);
-    var legL = new THREE.Mesh(legGeo, mat);
-    legL.position.set(0.15, 0.2, 0);
+    // Fists
+    var fistGeo = new THREE.SphereGeometry(0.2, 5, 5);
+    var fistL = new THREE.Mesh(fistGeo, darkMat);
+    fistL.position.set(1.0, 0.9, 0);
+    g.add(fistL);
+    var fistR = fistL.clone();
+    fistR.position.x = -1.0;
+    g.add(fistR);
+
+    // Legs — stumpy and powerful
+    var legGeo = new THREE.CylinderGeometry(0.25, 0.3, 0.8, 6);
+    var legL = new THREE.Mesh(legGeo, darkMat);
+    legL.position.set(0.35, 0.4, 0);
     g.add(legL);
     var legR = legL.clone();
-    legR.position.x = -0.15;
+    legR.position.x = -0.35;
     g.add(legR);
 
-    // Club
-    var clubMat = new THREE.MeshStandardMaterial({ color: 0x4a3a20, roughness: 0.8 });
-    var club = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.1, 0.8, 6), clubMat);
-    club.position.set(0.55, 0.8, 0);
-    club.rotation.z = -0.8;
-    g.add(club);
+    // Loincloth
+    var clothMat = new THREE.MeshStandardMaterial({ color: 0x5a3a1a, roughness: 0.9 });
+    var cloth = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.4, 0.6), clothMat);
+    cloth.position.y = 0.8;
+    g.add(cloth);
 
-    // Orient ogre in direction of travel
+    // Club — massive wooden weapon
+    var clubMat = new THREE.MeshStandardMaterial({ color: 0x6a4a1a, roughness: 0.8, emissive: new THREE.Color(0x3a2510), emissiveIntensity: 0.3 });
+    var clubHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 2.0, 6), clubMat);
+    clubHandle.position.set(1.15, 1.8, 0.2);
+    clubHandle.rotation.z = -0.6;
+    g.add(clubHandle);
+    var clubHead = new THREE.Mesh(new THREE.SphereGeometry(0.25, 5, 5), clubMat);
+    clubHead.position.set(1.5, 2.8, 0.2);
+    g.add(clubHead);
+
     g.rotation.y = Math.PI / 2;
     if (cfg.speed < 0) g.rotation.y = -Math.PI / 2;
     g.position.set(cfg.x, 0, cfg.phase || 0);
@@ -1760,91 +1745,7 @@ var MedievalKingdom = (function () {
     traffic.push({ type: "ogre", mesh: g, cfg: cfg });
   }
 
-  // ─── Knights (replacing light cycles) ───
-
-  var knightPair = null;
-
-  function makeKnightMesh(col) {
-    var g = new THREE.Group();
-    var horse = makeHorse(0x3a2a1a);
-    horse.scale.set(0.6, 0.6, 0.6);
-    g.add(horse);
-
-    // Rider
-    var armorMat = new THREE.MeshStandardMaterial({
-      color: col, emissive: col, emissiveIntensity: 0.3,
-      metalness: 0.8, roughness: 0.2,
-    });
-    var torso = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.4, 0.2), armorMat);
-    torso.position.set(0, 1.0, 0);
-    g.add(torso);
-    var helm = new THREE.Mesh(new THREE.SphereGeometry(0.12, 6, 6), armorMat);
-    helm.position.set(0, 1.25, 0);
-    g.add(helm);
-
-    // Lance
-    var lanceMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.7 });
-    var lance = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2.0, 4), lanceMat);
-    lance.position.set(0.2, 1.0, 0);
-    lance.rotation.z = -0.3;
-    g.add(lance);
-
-    // Glow
-    var glow = new THREE.PointLight(col.getHex(), 1.5, 6);
-    glow.position.set(0, 0.5, 0);
-    g.add(glow);
-
-    return g;
-  }
-
-  function addKnights() {
-    var TRAIL_LEN = 150;
-    var LATERAL_OFFSET = 2.0;
-    var startX = -90, startZ = -45;
-
-    var colA = new THREE.Color(0xffd700);
-    var colB = new THREE.Color(0xcc3333);
-
-    var meshA = makeKnightMesh(colA);
-    var meshB = makeKnightMesh(colB);
-    meshA.position.set(startX, 0, startZ - LATERAL_OFFSET / 2);
-    meshB.position.set(startX, 0, startZ + LATERAL_OFFSET / 2);
-    scene.add(meshA);
-    scene.add(meshB);
-
-    // Dust trails
-    function makeTrail(sx, sz, color) {
-      var positions = new Float32Array(TRAIL_LEN * 3);
-      for (var i = 0; i < TRAIL_LEN; i++) {
-        positions[i * 3] = sx;
-        positions[i * 3 + 1] = 0.1;
-        positions[i * 3 + 2] = sz;
-      }
-      var geo = new THREE.BufferGeometry();
-      geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-      var mat = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.4, linewidth: 2 });
-      var line = new THREE.Line(geo, mat);
-      line.frustumCulled = false;
-      scene.add(line);
-      return { line: line };
-    }
-
-    var trailA = makeTrail(startX, startZ - LATERAL_OFFSET / 2, 0xffd700);
-    var trailB = makeTrail(startX, startZ + LATERAL_OFFSET / 2, 0xcc3333);
-
-    knightPair = {
-      meshA: meshA, meshB: meshB,
-      trailA: trailA, trailB: trailB,
-      TRAIL_LEN: TRAIL_LEN, LATERAL: LATERAL_OFFSET,
-      leaderX: startX, leaderZ: startZ,
-      dirIndex: 0, speed: 16, turnTimer: 1.5, turnInterval: 2.0,
-      bounds: { minX: -120, maxX: 120, minZ: -80, maxZ: -25 },
-    };
-
-    traffic.push({ type: "knight_pair" });
-  }
-
-  // ─── Catapult (replacing rocket) ───
+  // ─── Catapult ───
 
   function addCatapult() {
     var padX = -55, padZ = -8;
@@ -1958,25 +1859,6 @@ var MedievalKingdom = (function () {
     for (var i = 0; i < traffic.length; i++) {
       var v = traffic[i];
 
-      if (v.type === "dragon") {
-        var c = v.cfg;
-        var angle = c.phase + t * c.speed;
-        var x = c.cx + Math.cos(angle) * c.rx;
-        var z = c.cz + Math.sin(angle) * c.rz;
-        v.mesh.position.set(x, c.altitude + Math.sin(t * 0.5) * 2, z);
-
-        var nextAngle = angle + 0.01 * Math.sign(c.speed);
-        v.mesh.lookAt(c.cx + Math.cos(nextAngle) * c.rx, c.altitude, c.cz + Math.sin(nextAngle) * c.rz);
-        v.mesh.rotateY(Math.PI / 2);
-
-        // Wing flap
-        v.mesh.traverse(function (ch) {
-          if (ch.userData._isWing) {
-            ch.rotation.x = ch.userData._wingDir * Math.sin(t * 4) * 0.5;
-          }
-        });
-      }
-
       if (v.type === "wagon") {
         v.mesh.position.x += v.cfg.speed * dt;
         if (v.mesh.position.x > 65) v.mesh.position.x = -65;
@@ -1985,8 +1867,10 @@ var MedievalKingdom = (function () {
       if (v.type === "ogre") {
         var c = v.cfg;
         v.mesh.position.z += c.speed * dt;
-        // Bob up and down while walking
-        v.mesh.position.y = Math.abs(Math.sin(t * 3 + i * 2)) * 0.1;
+        // Heavy lumbering stride
+        v.mesh.position.y = Math.abs(Math.sin(t * 2.5 + i * 2)) * 0.2;
+        // Slight sway side to side
+        v.mesh.rotation.z = Math.sin(t * 2.5 + i * 3) * 0.06;
         if (c.speed > 0 && v.mesh.position.z > 14) v.mesh.position.z = -22;
         if (c.speed < 0 && v.mesh.position.z < -22) v.mesh.position.z = 14;
       }
@@ -2049,55 +1933,6 @@ var MedievalKingdom = (function () {
         v.smoke.geometry.attributes.position.needsUpdate = true;
       }
 
-      if (v.type === "knight_pair" && knightPair) {
-        var lc = knightPair;
-        var DIR_DX = [0, 1, 0, -1], DIR_DZ = [1, 0, -1, 0];
-        var DIR_ANGLE = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
-
-        lc.turnTimer -= dt;
-        if (lc.turnTimer <= 0) {
-          lc.turnTimer = lc.turnInterval + (Math.random() - 0.5) * 0.6;
-          lc.dirIndex = Math.random() < 0.5 ? (lc.dirIndex + 1) % 4 : (lc.dirIndex + 3) % 4;
-        }
-
-        var dx = DIR_DX[lc.dirIndex], dz = DIR_DZ[lc.dirIndex];
-        lc.leaderX += dx * lc.speed * dt;
-        lc.leaderZ += dz * lc.speed * dt;
-
-        var b = lc.bounds, margin = 8, bounced = false;
-        if (lc.leaderX < b.minX + margin && dx < 0) { lc.dirIndex = (Math.random() < 0.5) ? (lc.dirIndex + 1) % 4 : (lc.dirIndex + 3) % 4; lc.leaderX = b.minX + margin + 1; bounced = true; }
-        else if (lc.leaderX > b.maxX - margin && dx > 0) { lc.dirIndex = (Math.random() < 0.5) ? (lc.dirIndex + 1) % 4 : (lc.dirIndex + 3) % 4; lc.leaderX = b.maxX - margin - 1; bounced = true; }
-        if (!bounced) {
-          if (lc.leaderZ < b.minZ + margin && dz < 0) { lc.dirIndex = (Math.random() < 0.5) ? (lc.dirIndex + 1) % 4 : (lc.dirIndex + 3) % 4; lc.leaderZ = b.minZ + margin + 1; }
-          else if (lc.leaderZ > b.maxZ - margin && dz > 0) { lc.dirIndex = (Math.random() < 0.5) ? (lc.dirIndex + 1) % 4 : (lc.dirIndex + 3) % 4; lc.leaderZ = b.maxZ - margin - 1; }
-        }
-
-        var heading = DIR_ANGLE[lc.dirIndex];
-        var perpX = -Math.cos(heading), perpZ = Math.sin(heading), half = lc.LATERAL / 2;
-
-        var posAx = lc.leaderX + perpX * (-half), posAz = lc.leaderZ + perpZ * (-half);
-        var posBx = lc.leaderX + perpX * half, posBz = lc.leaderZ + perpZ * half;
-
-        lc.meshA.position.set(posAx, 0, posAz); lc.meshA.rotation.y = heading;
-        lc.meshB.position.set(posBx, 0, posBz); lc.meshB.rotation.y = heading;
-
-        // Update trails
-        var pairs = [
-          { trail: lc.trailA, px: posAx, pz: posAz },
-          { trail: lc.trailB, px: posBx, pz: posBz },
-        ];
-        for (var pi = 0; pi < 2; pi++) {
-          var tr = pairs[pi].trail;
-          var tp = tr.line.geometry.attributes.position.array;
-          for (var ti = lc.TRAIL_LEN - 1; ti > 0; ti--) {
-            tp[ti * 3] = tp[(ti - 1) * 3];
-            tp[ti * 3 + 1] = tp[(ti - 1) * 3 + 1];
-            tp[ti * 3 + 2] = tp[(ti - 1) * 3 + 2];
-          }
-          tp[0] = pairs[pi].px; tp[1] = 0.1; tp[2] = pairs[pi].pz;
-          tr.line.geometry.attributes.position.needsUpdate = true;
-        }
-      }
     }
   }
 
@@ -2480,6 +2315,17 @@ var MedievalKingdom = (function () {
         obj.material.opacity = flicker;
         var fs = 0.8 + Math.sin(t * 10 + obj.id) * 0.3;
         obj.scale.setScalar(fs);
+      }
+      if (obj.userData._isCampFlame) {
+        var fi = obj.userData._flameIdx || 0;
+        var sway = Math.sin(t * 5 + fi * 2) * 0.08;
+        obj.position.x += sway * 0.01;
+        obj.scale.set(
+          0.8 + Math.sin(t * 7 + fi) * 0.3,
+          0.9 + Math.sin(t * 6 + fi * 1.5) * 0.25,
+          0.8 + Math.cos(t * 8 + fi) * 0.3
+        );
+        obj.material.opacity = 0.7 + Math.sin(t * 9 + fi * 3) * 0.25;
       }
     });
 
