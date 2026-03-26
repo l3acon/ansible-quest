@@ -510,25 +510,35 @@ html, body {
 
 #info-overlay .info-card {
     max-width: 60%;
+    max-height: 80vh;
+    overflow-y: auto;
     padding: 4vh 4vw;
-    background: rgba(30, 20, 10, 0.9);
-    border: 1px solid rgba(255, 200, 80, 0.3);
+    background: rgba(30, 20, 10, 0.95);
+    border: 2px solid rgba(255, 200, 80, 0.4);
     border-radius: 8px;
     color: rgba(255, 220, 150, 0.9);
     font-family: 'MedievalSharp', cursive;
     text-align: center;
+    box-shadow: 0 0 40px rgba(255, 170, 0, 0.15), inset 0 0 60px rgba(0,0,0,0.3);
 }
+#info-overlay .info-card::-webkit-scrollbar { width: 6px; }
+#info-overlay .info-card::-webkit-scrollbar-track { background: rgba(30, 20, 10, 0.5); }
+#info-overlay .info-card::-webkit-scrollbar-thumb { background: rgba(255, 200, 80, 0.3); border-radius: 3px; }
 
 #info-overlay .info-card h2 {
     font-family: 'Cinzel', serif;
     color: #ffd700;
-    font-size: 2.5vw;
+    font-size: 1.8vw;
     margin-bottom: 2vh;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
+    line-height: 1.3;
 }
 
 #info-overlay .info-card p {
-    font-size: 1.2vw;
+    font-size: 1.05vw;
+    white-space: pre-line;
+    text-align: left;
+    line-height: 1.7;
     line-height: 1.8;
     opacity: 0.8;
 }
@@ -586,14 +596,14 @@ html, body {
             <span class="realm-icon">&#9876;</span>
             <span class="realm-title">Ansible Quest</span>
             <span class="realm-divider">|</span>
-            <span class="realm-subtitle">Forge thy kingdom through the power of automation</span>
+            <span class="realm-subtitle">Master Ansible Dev Tools — from Create to Test to Deploy</span>
         </div>
 
         <div id="mainContent">
             <div id="landingPage">
-                <div id="village" class="realmOption"><span>Village</span></div>
-                <div id="township" class="realmOption"><span>Township</span></div>
-                <div id="fortress" class="realmOption"><span>Fortress</span></div>
+                <div id="village" class="realmOption"><span>⚒️ Village — Create</span></div>
+                <div id="township" class="realmOption"><span>🏰 Township — Test</span></div>
+                <div id="fortress" class="realmOption"><span>⚔️ Fortress — Deploy</span></div>
                 <div id="go-fullscreen"></div>
             </div>
             <div id="landing-bottom-bar">
@@ -732,6 +742,7 @@ var MedievalKingdom = (function () {
     addFireflies();
     addStars();
     addTrees();
+    addMountains();
     addTraffic();
     createLabels();
 
@@ -770,7 +781,7 @@ var MedievalKingdom = (function () {
     scene.add(grid);
 
     // Dirt roads — visible tan/brown
-    var roadW = 2.2;
+    var roadW = 3.5;
     var roadMat = new THREE.MeshStandardMaterial({ color: 0x8a6a3a, roughness: 0.9, emissive: new THREE.Color(0x3a2a10), emissiveIntensity: 0.15 });
     var hRoad = new THREE.Mesh(new THREE.PlaneGeometry(130, roadW), roadMat);
     hRoad.rotation.x = -Math.PI / 2;
@@ -808,7 +819,8 @@ var MedievalKingdom = (function () {
   }
 
   function addCampfires(cx, cz) {
-    var spots = [[cx - 6, cz + 5], [cx + 5, cz - 4], [cx - 3, cz - 7], [cx + 7, cz + 7]];
+    // Place campfires safely outside the building grid (buildings span cx±10, cz±9)
+    var spots = [[cx - 13, cz + 3], [cx + 13, cz - 3], [cx - 13, cz - 5], [cx + 13, cz + 6]];
     for (var i = 0; i < spots.length; i++) {
       var fx = spots[i][0], fz = spots[i][1];
       var fg = new THREE.Group();
@@ -865,25 +877,94 @@ var MedievalKingdom = (function () {
 
   function addMoat(cx, cz) {
     var waterMat = new THREE.MeshStandardMaterial({
-      color: 0x1a6a9a, roughness: 0.3, metalness: 0.4,
-      emissive: new THREE.Color(0x0a3a5a), emissiveIntensity: 0.4,
-      transparent: true, opacity: 0.75,
+      color: 0x2288bb, roughness: 0.25, metalness: 0.4,
+      emissive: new THREE.Color(0x104060), emissiveIntensity: 0.5,
+      transparent: true, opacity: 0.8,
+    });
+    var wallMat = new THREE.MeshStandardMaterial({
+      color: 0x7a7060, roughness: 0.75, metalness: 0.15,
+      emissive: new THREE.Color(0x2a2520), emissiveIntensity: 0.2,
     });
 
-    var moatWidth = 2.0;
-    var innerR = 12.5;
-    var outerR = innerR + moatWidth;
+    var half = 12;
+    var mw = 1.8;
+    var wallH = 0.6;
+    var gateGap = 3;
 
-    // Moat ring — use a flat torus
-    var moatGeo = new THREE.TorusGeometry((innerR + outerR) / 2, moatWidth / 2, 4, 32);
-    var moat = new THREE.Mesh(moatGeo, waterMat);
-    moat.rotation.x = -Math.PI / 2;
-    moat.position.set(cx, 0.05, cz);
-    scene.add(moat);
+    // 4 water channels (N, S, E, W) with gap on south side for drawbridge
+    // North side
+    var nWater = new THREE.Mesh(new THREE.PlaneGeometry(half * 2, mw), waterMat);
+    nWater.rotation.x = -Math.PI / 2;
+    nWater.position.set(cx, 0.06, cz - half);
+    scene.add(nWater);
+    // South side — two segments with drawbridge gap in center
+    var sSegLen = (half * 2 - gateGap) / 2;
+    var sL = new THREE.Mesh(new THREE.PlaneGeometry(sSegLen, mw), waterMat);
+    sL.rotation.x = -Math.PI / 2;
+    sL.position.set(cx - sSegLen / 2 - gateGap / 2, 0.06, cz + half);
+    scene.add(sL);
+    var sR = new THREE.Mesh(new THREE.PlaneGeometry(sSegLen, mw), waterMat);
+    sR.rotation.x = -Math.PI / 2;
+    sR.position.set(cx + sSegLen / 2 + gateGap / 2, 0.06, cz + half);
+    scene.add(sR);
+    // East side
+    var eWater = new THREE.Mesh(new THREE.PlaneGeometry(mw, half * 2), waterMat);
+    eWater.rotation.x = -Math.PI / 2;
+    eWater.position.set(cx + half, 0.06, cz);
+    scene.add(eWater);
+    // West side
+    var wWater = new THREE.Mesh(new THREE.PlaneGeometry(mw, half * 2), waterMat);
+    wWater.rotation.x = -Math.PI / 2;
+    wWater.position.set(cx - half, 0.06, cz);
+    scene.add(wWater);
 
-    // Shimmer light
-    var waterGlow = new THREE.PointLight(0x2288cc, 1.5, 20, 2);
-    waterGlow.position.set(cx, 1, cz);
+    // Stone walls along moat edges (inner + outer)
+    var segs = [
+      // North outer/inner
+      [cx, cz - half - mw / 2, half * 2 + mw * 2, true],
+      [cx, cz - half + mw / 2, half * 2 - mw * 2, true],
+      // South outer (two pieces with gate gap)
+      [cx - sSegLen / 2 - gateGap / 2, cz + half + mw / 2, sSegLen, true],
+      [cx + sSegLen / 2 + gateGap / 2, cz + half + mw / 2, sSegLen, true],
+      // South inner
+      [cx - sSegLen / 2 - gateGap / 2, cz + half - mw / 2, sSegLen, true],
+      [cx + sSegLen / 2 + gateGap / 2, cz + half - mw / 2, sSegLen, true],
+      // East outer/inner
+      [cx + half + mw / 2, cz, half * 2 + mw * 2, false],
+      [cx + half - mw / 2, cz, half * 2 - mw * 2, false],
+      // West outer/inner
+      [cx - half - mw / 2, cz, half * 2 + mw * 2, false],
+      [cx - half + mw / 2, cz, half * 2 - mw * 2, false],
+    ];
+    for (var si = 0; si < segs.length; si++) {
+      var s = segs[si];
+      var wLen = s[2];
+      var geo = s[3] ? new THREE.BoxGeometry(wLen, wallH, 0.25) : new THREE.BoxGeometry(0.25, wallH, wLen);
+      var wall = new THREE.Mesh(geo, wallMat);
+      wall.position.set(s[0], wallH / 2, s[1]);
+      scene.add(wall);
+    }
+
+    // Drawbridge — wooden plank over the south gap
+    var bridgeMat = new THREE.MeshStandardMaterial({ color: 0x7a5a2a, roughness: 0.8, emissive: new THREE.Color(0x3a2a10), emissiveIntensity: 0.2 });
+    var bridge = new THREE.Mesh(new THREE.BoxGeometry(gateGap + 0.5, 0.15, mw + 0.6), bridgeMat);
+    bridge.position.set(cx, 0.12, cz + half);
+    scene.add(bridge);
+
+    // Gate towers flanking drawbridge
+    var towerMat = new THREE.MeshStandardMaterial({ color: 0x8a7a60, roughness: 0.7, metalness: 0.2, emissive: new THREE.Color(0x2a2520), emissiveIntensity: 0.15 });
+    for (var gi = -1; gi <= 1; gi += 2) {
+      var tower = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.7, 4, 6), towerMat);
+      tower.position.set(cx + gi * (gateGap / 2 + 0.5), 2, cz + half);
+      scene.add(tower);
+      var tRoof = new THREE.Mesh(new THREE.ConeGeometry(0.8, 1.5, 6), new THREE.MeshStandardMaterial({ color: 0x8a2020, roughness: 0.7 }));
+      tRoof.position.set(cx + gi * (gateGap / 2 + 0.5), 4.5, cz + half);
+      scene.add(tRoof);
+    }
+
+    // Subtle water glow
+    var waterGlow = new THREE.PointLight(0x2288cc, 1.0, 25, 2);
+    waterGlow.position.set(cx, 1.5, cz);
     scene.add(waterGlow);
   }
 
@@ -905,13 +986,13 @@ var MedievalKingdom = (function () {
 
     var n = positions.length;
     var trunkGeo = new THREE.CylinderGeometry(0.12, 0.18, 1, 4);
-    var trunkMat = new THREE.MeshStandardMaterial({ color: 0x5a3a1a, roughness: 0.9 });
+    var trunkMat = new THREE.MeshStandardMaterial({ color: 0x6a4a2a, roughness: 0.85, emissive: new THREE.Color(0x2a1a08), emissiveIntensity: 0.3 });
     var trunkIM = new THREE.InstancedMesh(trunkGeo, trunkMat, n);
 
     var foliageGeo = new THREE.ConeGeometry(1, 1, 5);
-    var foliageMat = new THREE.MeshStandardMaterial({ color: 0x1a5a1a, roughness: 0.8 });
+    var foliageMat = new THREE.MeshStandardMaterial({ color: 0x2a8a2a, roughness: 0.75, emissive: new THREE.Color(0x0a3a0a), emissiveIntensity: 0.5 });
     var foliageIM1 = new THREE.InstancedMesh(foliageGeo, foliageMat, n);
-    var foliageMat2 = new THREE.MeshStandardMaterial({ color: 0x145214, roughness: 0.85 });
+    var foliageMat2 = new THREE.MeshStandardMaterial({ color: 0x1e7a20, roughness: 0.8, emissive: new THREE.Color(0x083008), emissiveIntensity: 0.45 });
     var foliageIM2 = new THREE.InstancedMesh(foliageGeo, foliageMat2, n);
     var foliageIM3 = new THREE.InstancedMesh(foliageGeo, foliageMat2, n);
 
@@ -939,6 +1020,67 @@ var MedievalKingdom = (function () {
     scene.add(foliageIM3);
   }
 
+  function addMountains() {
+    var mtMat = new THREE.MeshStandardMaterial({
+      color: 0x3a4a5a, roughness: 0.85, metalness: 0.1,
+      emissive: new THREE.Color(0x0a1520), emissiveIntensity: 0.35,
+    });
+    var snowMat = new THREE.MeshStandardMaterial({
+      color: 0x8899aa, roughness: 0.6, metalness: 0.1,
+      emissive: new THREE.Color(0x2a3a4a), emissiveIntensity: 0.4,
+    });
+    var hillMat = new THREE.MeshStandardMaterial({
+      color: 0x1a4a22, roughness: 0.85, metalness: 0.05,
+      emissive: new THREE.Color(0x082a0a), emissiveIntensity: 0.3,
+    });
+
+    // Big mountains along the back (negative Z — behind guild area)
+    var peaks = [
+      { x: -60, z: -80, h: 35, r: 25, snow: true },
+      { x: -20, z: -90, h: 45, r: 30, snow: true },
+      { x: 25,  z: -85, h: 38, r: 22, snow: true },
+      { x: 65,  z: -78, h: 30, r: 20, snow: true },
+      { x: -90, z: -70, h: 25, r: 18, snow: false },
+      { x: 90,  z: -72, h: 22, r: 16, snow: false },
+    ];
+
+    for (var i = 0; i < peaks.length; i++) {
+      var pk = peaks[i];
+      var mtGeo = new THREE.ConeGeometry(pk.r, pk.h, 6);
+      var mt = new THREE.Mesh(mtGeo, mtMat);
+      mt.position.set(pk.x, pk.h / 2 - 2, pk.z);
+      scene.add(mt);
+
+      if (pk.snow) {
+        var capH = pk.h * 0.25;
+        var capR = pk.r * 0.35;
+        var cap = new THREE.Mesh(new THREE.ConeGeometry(capR, capH, 6), snowMat);
+        cap.position.set(pk.x, pk.h - capH / 2 - 2, pk.z);
+        scene.add(cap);
+      }
+    }
+
+    // Rolling hills on the sides and far edges
+    var hills = [
+      { x: -100, z: -40, h: 8, r: 20 },
+      { x: -85,  z: -55, h: 12, r: 18 },
+      { x: 95,   z: -45, h: 10, r: 22 },
+      { x: 110,  z: -30, h: 7, r: 15 },
+      { x: -110, z: 10,  h: 6, r: 18 },
+      { x: 105,  z: 15,  h: 8, r: 20 },
+      { x: -70,  z: -65, h: 10, r: 15 },
+      { x: 50,   z: -70, h: 14, r: 18 },
+    ];
+
+    for (var i = 0; i < hills.length; i++) {
+      var hl = hills[i];
+      var hlGeo = new THREE.ConeGeometry(hl.r, hl.h, 5);
+      var hlMesh = new THREE.Mesh(hlGeo, hillMat);
+      hlMesh.position.set(hl.x, hl.h / 2 - 1, hl.z);
+      scene.add(hlMesh);
+    }
+  }
+
   // ─── District Styles ───
 
   var DISTRICT_STYLES = {
@@ -964,9 +1106,9 @@ var MedievalKingdom = (function () {
     var bList = [];
     var style = DISTRICT_STYLES[id];
 
-    var vRoadHalf = 1.6;
+    var vRoadHalf = 2.2;
     var hRoadWorldZ = 14;
-    var hRoadHalf = 1.6;
+    var hRoadHalf = 2.2;
 
     for (var x = -10; x <= 10; x += 3.2) {
       for (var z = -9; z <= 9; z += 3.2) {
@@ -1481,12 +1623,12 @@ var MedievalKingdom = (function () {
     addStoneBridge(14);
 
     // Bigger, meaner ogres — clearly visible on the roads
-    addOgre({ road: "v", x: -28.5, speed: -2.5, phase: 10, color: 0x4aaa2a });
-    addOgre({ road: "v", x: -27.5, speed:  3,   phase: -15, color: 0x5abb3a });
-    addOgre({ road: "v", x:  0.5,  speed:  3,   phase: 5,   color: 0x5aaa2a });
-    addOgre({ road: "v", x: -0.5,  speed: -2.5, phase: -10, color: 0x3aaa3a });
-    addOgre({ road: "v", x: 28.5,  speed: -2.5, phase: 0,   color: 0x6aaa2a });
-    addOgre({ road: "v", x: 27.5,  speed:  3,   phase: -18, color: 0x4abb1a });
+    addOgre({ road: "v", x: -29.4, speed: -2.5, phase: 10, color: 0x4aaa2a });
+    addOgre({ road: "v", x: -26.6, speed:  3,   phase: -15, color: 0x5abb3a });
+    addOgre({ road: "v", x:  1.4,  speed:  3,   phase: 5,   color: 0x5aaa2a });
+    addOgre({ road: "v", x: -1.4,  speed: -2.5, phase: -10, color: 0x3aaa3a });
+    addOgre({ road: "v", x: 29.4,  speed: -2.5, phase: 0,   color: 0x6aaa2a });
+    addOgre({ road: "v", x: 26.6,  speed:  3,   phase: -18, color: 0x4abb1a });
 
     addCatapult();
   }
@@ -1546,212 +1688,459 @@ var MedievalKingdom = (function () {
     }
   }
 
-  // ─── Wagon Train ───
+  // ─── Wagon Train — medieval supply caravan ───
 
   function addWagonTrain(cfg) {
     var g = new THREE.Group();
-    var woodMat = new THREE.MeshStandardMaterial({ color: cfg.color, roughness: 0.75, metalness: 0.1, emissive: new THREE.Color(cfg.color).multiplyScalar(0.15), emissiveIntensity: 1 });
-    var metalMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.6, roughness: 0.4 });
 
-    // Lead horses (2)
+    // === LEAD HORSES — side by side ===
+    var horseColors = [0x7a5530, 0x5a3a20];
+    var horseLegRefs = [];
     for (var hi = 0; hi < 2; hi++) {
-      var horse = makeHorse(0x5a3a20);
-      horse.position.set(4 + hi * 1.5, 0, (hi - 0.5) * 0.8);
-      horse.scale.set(0.5, 0.5, 0.5);
-      g.add(horse);
+      var horseData = makeHorse(horseColors[hi]);
+      horseData.group.position.set(5.0, 0, (hi - 0.5) * 1.4);
+      g.add(horseData.group);
+      horseLegRefs.push(horseData.legs);
     }
 
-    // Main wagon
-    var wagonBody = new THREE.Mesh(new THREE.BoxGeometry(3, 0.8, 1.2), woodMat);
-    wagonBody.position.set(0, 0.6, 0);
-    g.add(wagonBody);
+    // Yoke bar between horses + traces to wagon
+    var ropeMat = new THREE.MeshStandardMaterial({ color: 0x5a4a30, roughness: 0.9 });
+    var yoke = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 1.8), ropeMat);
+    yoke.position.set(4.2, 0.7, 0);
+    g.add(yoke);
+    for (var ri = -1; ri <= 1; ri += 2) {
+      var trace = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.04, 0.04), ropeMat);
+      trace.position.set(3.0, 0.65, ri * 0.7);
+      g.add(trace);
+    }
 
-    // Wagon canopy
-    var canopyGeo = new THREE.CylinderGeometry(0.6, 0.6, 2.8, 8, 1, false, 0, Math.PI);
-    var canopyMat = new THREE.MeshStandardMaterial({ color: 0x8a7a5a, roughness: 0.9, side: THREE.DoubleSide });
-    var canopy = new THREE.Mesh(canopyGeo, canopyMat);
+    // === MAIN WAGON — bright, visible ===
+    var darkWood = new THREE.MeshStandardMaterial({
+      color: 0x8a6a35, roughness: 0.7, metalness: 0.05,
+      emissive: new THREE.Color(0x4a3a18), emissiveIntensity: 0.35,
+    });
+    var lightWood = new THREE.MeshStandardMaterial({
+      color: 0xaa8a50, roughness: 0.75, metalness: 0.05,
+      emissive: new THREE.Color(0x5a4a25), emissiveIntensity: 0.3,
+    });
+    var metalMat = new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.5, roughness: 0.4 });
+
+    // Wagon bed / floor
+    var bed = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.2, 1.6), darkWood);
+    bed.position.set(0, 0.55, 0);
+    g.add(bed);
+
+    // Side walls
+    var sideGeo = new THREE.BoxGeometry(3.5, 0.6, 0.1);
+    var sideL = new THREE.Mesh(sideGeo, lightWood);
+    sideL.position.set(0, 0.95, 0.8);
+    g.add(sideL);
+    var sideR = sideL.clone();
+    sideR.position.z = -0.8;
+    g.add(sideR);
+    // Front/back walls
+    var endGeo = new THREE.BoxGeometry(0.1, 0.6, 1.6);
+    var front = new THREE.Mesh(endGeo, lightWood);
+    front.position.set(1.75, 0.95, 0);
+    g.add(front);
+    var back = front.clone();
+    back.position.x = -1.75;
+    g.add(back);
+
+    // Canvas canopy — bright cream/off-white, arched
+    var canvasMat = new THREE.MeshStandardMaterial({
+      color: 0xddccaa, roughness: 0.85, metalness: 0.0, side: THREE.DoubleSide,
+      emissive: new THREE.Color(0x6a5a40), emissiveIntensity: 0.3,
+    });
+    // Canopy ribs (wooden arches)
+    for (var ci = -1; ci <= 1; ci++) {
+      var rib = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.04, 4, 8, Math.PI), darkWood);
+      rib.position.set(ci * 1.2, 1.25, 0);
+      rib.rotation.y = Math.PI / 2;
+      g.add(rib);
+    }
+    // Canvas cover — cylinder half
+    var canopyGeo = new THREE.CylinderGeometry(0.7, 0.7, 3.2, 8, 1, false, 0, Math.PI);
+    var canopy = new THREE.Mesh(canopyGeo, canvasMat);
     canopy.rotation.z = Math.PI / 2;
-    canopy.position.set(0, 1.2, 0);
+    canopy.position.set(0, 1.25, 0);
     g.add(canopy);
 
-    // Wheels
-    var wheelGeo = new THREE.TorusGeometry(0.3, 0.06, 6, 12);
-    var positions = [[-1.2, 0.3, 0.7], [-1.2, 0.3, -0.7], [1.2, 0.3, 0.7], [1.2, 0.3, -0.7]];
-    positions.forEach(function (p) {
+    // Cargo peeking out the back — crates and barrels
+    var crateMat = new THREE.MeshStandardMaterial({ color: 0x9a7a45, roughness: 0.8, emissive: new THREE.Color(0x4a3a20), emissiveIntensity: 0.25 });
+    var crate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), crateMat);
+    crate.position.set(-1.4, 0.9, 0.3);
+    crate.rotation.y = 0.3;
+    g.add(crate);
+    var barrelMat = new THREE.MeshStandardMaterial({ color: 0x7a5a2a, roughness: 0.75, emissive: new THREE.Color(0x3a2a10), emissiveIntensity: 0.2 });
+    var barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.5, 6), barrelMat);
+    barrel.position.set(-1.3, 0.9, -0.3);
+    g.add(barrel);
+
+    // Wheels — bigger, visible with spokes implied by color contrast
+    var wheelGeo = new THREE.TorusGeometry(0.4, 0.08, 6, 10);
+    var hubGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.12, 6);
+    var wheelPositions = [[-1.3, 0.4, 0.9], [-1.3, 0.4, -0.9], [1.3, 0.4, 0.9], [1.3, 0.4, -0.9]];
+    wheelPositions.forEach(function (p) {
       var wheel = new THREE.Mesh(wheelGeo, metalMat);
       wheel.position.set(p[0], p[1], p[2]);
       wheel.rotation.y = Math.PI / 2;
       g.add(wheel);
+      var hub = new THREE.Mesh(hubGeo, darkWood);
+      hub.position.set(p[0], p[1], p[2]);
+      hub.rotation.x = Math.PI / 2;
+      g.add(hub);
     });
 
-    // Trailing wagons
+    // === TRAILING WAGONS — open-top supply carts ===
     for (var wi = 1; wi < cfg.wagons; wi++) {
       var tw = new THREE.Group();
-      var twBody = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.6, 1.0), woodMat);
-      twBody.position.y = 0.5;
-      tw.add(twBody);
-      positions.forEach(function (p) {
+      // Cart bed
+      var twBed = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.15, 1.3), darkWood);
+      twBed.position.y = 0.5;
+      tw.add(twBed);
+      // Low side walls
+      var twSideGeo = new THREE.BoxGeometry(2.4, 0.35, 0.08);
+      var twSL = new THREE.Mesh(twSideGeo, lightWood);
+      twSL.position.set(0, 0.75, 0.65);
+      tw.add(twSL);
+      var twSR = twSL.clone();
+      twSR.position.z = -0.65;
+      tw.add(twSR);
+      // Random cargo
+      if (wi % 2 === 1) {
+        var sack = new THREE.Mesh(new THREE.SphereGeometry(0.25, 5, 5), canvasMat);
+        sack.position.set(0.2, 0.75, 0);
+        sack.scale.set(1.2, 0.8, 1.0);
+        tw.add(sack);
+      } else {
+        var twCrate = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.6), crateMat);
+        twCrate.position.set(0, 0.75, 0);
+        tw.add(twCrate);
+      }
+      // Wheels
+      [[-0.9, 0.35, 0.75], [-0.9, 0.35, -0.75], [0.9, 0.35, 0.75], [0.9, 0.35, -0.75]].forEach(function (p) {
         var wh = new THREE.Mesh(wheelGeo, metalMat);
-        wh.position.set(p[0] * 0.8, p[1], p[2]);
+        wh.position.set(p[0], p[1], p[2]);
         wh.rotation.y = Math.PI / 2;
         tw.add(wh);
       });
-      tw.position.x = -wi * 3.0 - 2;
+      // Hitch connecting to previous wagon
+      var hitch = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 0.05), ropeMat);
+      hitch.position.set(1.5, 0.5, 0);
+      tw.add(hitch);
+      tw.position.x = -wi * 3.8 - 2;
       g.add(tw);
     }
 
-    // Lantern on lead wagon
-    var lantern = new THREE.PointLight(0xff9933, 2, 10, 2);
-    lantern.position.set(1.5, 1.5, 0);
-    g.add(lantern);
-    var lanternMesh = new THREE.Mesh(
-      new THREE.BoxGeometry(0.2, 0.3, 0.2),
-      new THREE.MeshBasicMaterial({ color: 0xffaa33, transparent: true, opacity: 0.8 })
+    // === LANTERN — small, subtle, on a hook at front ===
+    // Lantern post
+    var postMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.5, roughness: 0.4 });
+    var post = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.6, 4), postMat);
+    post.position.set(1.75, 1.5, 0.6);
+    g.add(post);
+    // Small lantern box
+    var lanternBox = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 0.18, 0.12),
+      new THREE.MeshBasicMaterial({ color: 0xffaa44, transparent: true, opacity: 0.7 })
     );
-    lanternMesh.position.copy(lantern.position);
-    g.add(lanternMesh);
+    lanternBox.position.set(1.75, 1.85, 0.6);
+    g.add(lanternBox);
+    // Subtle warm glow
+    var lantern = new THREE.PointLight(0xff9933, 0.8, 6, 2);
+    lantern.position.set(1.75, 1.85, 0.6);
+    g.add(lantern);
 
     g.position.set(-60, cfg.y, cfg.z);
     scene.add(g);
-    traffic.push({ type: "wagon", mesh: g, cfg: cfg });
+    traffic.push({ type: "wagon", mesh: g, cfg: cfg, horseLegRefs: horseLegRefs });
   }
 
   function makeHorse(color) {
     var g = new THREE.Group();
-    var mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.7, metalness: 0.1 });
-
-    // Body
-    var body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.6, 0.5), mat);
-    body.position.y = 0.8;
-    g.add(body);
-
-    // Head
-    var head = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.5, 0.3), mat);
-    head.position.set(0.9, 1.2, 0);
-    head.rotation.z = 0.3;
-    g.add(head);
-
-    // Legs
-    var legGeo = new THREE.BoxGeometry(0.12, 0.6, 0.12);
-    [[-0.5, 0.3, 0.15], [-0.5, 0.3, -0.15], [0.5, 0.3, 0.15], [0.5, 0.3, -0.15]].forEach(function (p) {
-      var leg = new THREE.Mesh(legGeo, mat);
-      leg.position.set(p[0], p[1], p[2]);
-      g.add(leg);
+    var mat = new THREE.MeshStandardMaterial({
+      color: color, roughness: 0.65, metalness: 0.05,
+      emissive: new THREE.Color(color).multiplyScalar(0.2), emissiveIntensity: 1,
+    });
+    var darkMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(color).multiplyScalar(0.6), roughness: 0.8,
     });
 
+    // Barrel body
+    var body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.35, 1.6, 6), mat);
+    body.rotation.z = Math.PI / 2;
+    body.position.y = 0.9;
+    g.add(body);
+
+    // Chest
+    var chest = new THREE.Mesh(new THREE.SphereGeometry(0.35, 5, 5), mat);
+    chest.position.set(0.6, 0.95, 0);
+    chest.scale.set(0.8, 0.9, 0.8);
+    g.add(chest);
+
+    // Rump
+    var rump = new THREE.Mesh(new THREE.SphereGeometry(0.32, 5, 5), mat);
+    rump.position.set(-0.6, 0.9, 0);
+    rump.scale.set(0.8, 0.85, 0.8);
+    g.add(rump);
+
+    // Neck
+    var neck = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 0.7, 5), mat);
+    neck.position.set(0.85, 1.25, 0);
+    neck.rotation.z = 0.6;
+    g.add(neck);
+
+    // Head
+    var head = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.22, 0.2), mat);
+    head.position.set(1.1, 1.5, 0);
+    head.rotation.z = 0.2;
+    g.add(head);
+
+    // Ears
+    var earGeo = new THREE.ConeGeometry(0.05, 0.15, 4);
+    var earL = new THREE.Mesh(earGeo, mat);
+    earL.position.set(0.95, 1.65, 0.08);
+    g.add(earL);
+    var earR = earL.clone();
+    earR.position.z = -0.08;
+    g.add(earR);
+
+    // Eyes
+    var eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.03, 4, 4), new THREE.MeshBasicMaterial({ color: 0x222222 }));
+    eyeL.position.set(1.05, 1.55, 0.1);
+    g.add(eyeL);
+    var eyeR = eyeL.clone();
+    eyeR.position.z = -0.1;
+    g.add(eyeR);
+
+    // Mane
+    var maneMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(color).multiplyScalar(0.4), roughness: 0.9 });
+    var mane = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.04), maneMat);
+    mane.position.set(0.8, 1.4, 0);
+    mane.rotation.z = 0.5;
+    g.add(mane);
+
     // Tail
-    var tail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, 0.08), mat);
-    tail.position.set(-0.9, 0.9, 0);
-    tail.rotation.z = -0.4;
+    var tail = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.04, 0.5, 4), darkMat);
+    tail.position.set(-0.85, 1.0, 0);
+    tail.rotation.z = -0.6;
     g.add(tail);
 
-    return g;
+    // === LEGS — pivoted at hip/shoulder for animation ===
+    var legGeo = new THREE.CylinderGeometry(0.06, 0.07, 0.55, 5);
+    var hoofMat = new THREE.MeshStandardMaterial({ color: 0x2a1a0a, roughness: 0.9 });
+    var hoofGeo = new THREE.CylinderGeometry(0.08, 0.09, 0.1, 5);
+
+    var legPivots = [];
+    // [x, pivotY, z] — front legs higher pivot than rear
+    var legDefs = [
+      { x: 0.5,  pY: 0.72, z: 0.18 },
+      { x: 0.5,  pY: 0.72, z: -0.18 },
+      { x: -0.5, pY: 0.72, z: 0.18 },
+      { x: -0.5, pY: 0.72, z: -0.18 },
+    ];
+    for (var li = 0; li < legDefs.length; li++) {
+      var ld = legDefs[li];
+      var pivot = new THREE.Group();
+      pivot.position.set(ld.x, ld.pY, ld.z);
+
+      var legMesh = new THREE.Mesh(legGeo, darkMat);
+      legMesh.position.y = -0.28;
+      pivot.add(legMesh);
+
+      var hoof = new THREE.Mesh(hoofGeo, hoofMat);
+      hoof.position.y = -0.58;
+      pivot.add(hoof);
+
+      g.add(pivot);
+      legPivots.push(pivot);
+    }
+
+    return { group: g, legs: legPivots };
   }
 
-  // ─── Ogres — big, stompy, Warcraft-style ───
+  // ─── Ogres — hunched, top-heavy, ape-like brutes ───
 
   function addOgre(cfg) {
     var g = new THREE.Group();
     var skinColor = new THREE.Color(cfg.color);
     var mat = new THREE.MeshStandardMaterial({
-      color: skinColor, roughness: 0.7, metalness: 0.05,
+      color: skinColor, roughness: 0.65, metalness: 0.05,
       emissive: skinColor.clone().multiplyScalar(0.2), emissiveIntensity: 1,
     });
     var darkMat = new THREE.MeshStandardMaterial({
-      color: skinColor.clone().multiplyScalar(0.7), roughness: 0.8, metalness: 0.05,
+      color: skinColor.clone().multiplyScalar(0.6), roughness: 0.8, metalness: 0.05,
+    });
+    var bellyMat = new THREE.MeshStandardMaterial({
+      color: skinColor.clone().lerp(new THREE.Color(0xaaaa77), 0.3), roughness: 0.7, metalness: 0.02,
     });
 
-    // Barrel body — thicc
-    var body = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.8, 1.6, 8), mat);
-    body.position.y = 1.4;
-    g.add(body);
+    // === UPPER BODY (hunched forward as a unit) ===
+    var upper = new THREE.Group();
+    upper.position.set(0, 1.1, 0);
+    upper.rotation.x = 0.2;
 
-    // Shoulders
-    var shoulder = new THREE.Mesh(new THREE.SphereGeometry(0.55, 6, 6), mat);
-    shoulder.position.y = 2.3;
-    shoulder.scale.set(1.4, 0.6, 1.0);
-    g.add(shoulder);
+    // Gut / belly — big sagging sphere, wider than chest
+    var belly = new THREE.Mesh(new THREE.SphereGeometry(0.85, 6, 6), bellyMat);
+    belly.position.set(0, 0.1, 0.15);
+    belly.scale.set(1.0, 0.8, 0.9);
+    upper.add(belly);
 
-    // Head — big underbite face
-    var head = new THREE.Mesh(new THREE.SphereGeometry(0.5, 6, 6), mat);
-    head.position.y = 2.8;
-    g.add(head);
+    // Chest / upper torso — broad, tapers up
+    var chest = new THREE.Mesh(new THREE.SphereGeometry(0.75, 6, 6), mat);
+    chest.position.set(0, 0.7, 0);
+    chest.scale.set(1.2, 0.9, 0.85);
+    upper.add(chest);
 
-    // Jaw/underbite
-    var jaw = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.2, 0.35), darkMat);
-    jaw.position.set(0, 2.55, 0.35);
-    g.add(jaw);
+    // Massive shoulder hump — the signature hunched look
+    var hump = new THREE.Mesh(new THREE.SphereGeometry(0.7, 5, 5), mat);
+    hump.position.set(0, 1.2, -0.15);
+    hump.scale.set(1.3, 0.7, 1.0);
+    upper.add(hump);
 
-    // Eyes — glowing yellow-red
+    // === HEAD — oversized, sits forward on the hump ===
+    var headGroup = new THREE.Group();
+    headGroup.position.set(0, 1.5, 0.35);
+
+    // Cranium — wide, flat on top
+    var cranium = new THREE.Mesh(new THREE.SphereGeometry(0.6, 6, 6), mat);
+    cranium.scale.set(1.1, 0.85, 0.95);
+    headGroup.add(cranium);
+
+    // Heavy brow ridge
+    var brow = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.15, 0.35), darkMat);
+    brow.position.set(0, 0.15, 0.35);
+    headGroup.add(brow);
+
+    // Eyes — sunken under the brow, glowing
     var eyeMat = new THREE.MeshBasicMaterial({ color: 0xff6600 });
-    var eye1 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 5, 5), eyeMat);
-    eye1.position.set(0.2, 2.9, 0.4);
-    g.add(eye1);
-    var eye2 = eye1.clone();
-    eye2.position.x = -0.2;
-    g.add(eye2);
+    var eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.09, 4, 4), eyeMat);
+    eyeL.position.set(0.22, 0.08, 0.5);
+    headGroup.add(eyeL);
+    var eyeR = eyeL.clone();
+    eyeR.position.x = -0.22;
+    headGroup.add(eyeR);
 
-    // Tusks
-    var tuskMat = new THREE.MeshStandardMaterial({ color: 0xeeeecc, roughness: 0.5, metalness: 0.3 });
-    var tusk1 = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.3, 4), tuskMat);
-    tusk1.position.set(0.18, 2.6, 0.45);
-    tusk1.rotation.x = -0.3;
-    g.add(tusk1);
-    var tusk2 = tusk1.clone();
-    tusk2.position.x = -0.18;
-    g.add(tusk2);
+    // Massive jaw — protruding underbite
+    var jaw = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.25, 0.45), darkMat);
+    jaw.position.set(0, -0.25, 0.25);
+    headGroup.add(jaw);
 
-    // Arms — big hanging
-    var armGeo = new THREE.CylinderGeometry(0.18, 0.22, 1.2, 6);
-    var armL = new THREE.Mesh(armGeo, mat);
-    armL.position.set(0.9, 1.6, 0);
-    armL.rotation.z = -0.25;
-    g.add(armL);
-    var armR = armL.clone();
-    armR.position.x = -0.9;
-    armR.rotation.z = 0.25;
-    g.add(armR);
+    // Tusks — thick, curving up from lower jaw
+    var tuskMat = new THREE.MeshStandardMaterial({ color: 0xddddbb, roughness: 0.4, metalness: 0.3 });
+    var tuskL = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.35, 4), tuskMat);
+    tuskL.position.set(0.25, -0.1, 0.45);
+    tuskL.rotation.x = -0.5;
+    tuskL.rotation.z = -0.2;
+    headGroup.add(tuskL);
+    var tuskR = tuskL.clone();
+    tuskR.position.x = -0.25;
+    tuskR.rotation.z = 0.2;
+    headGroup.add(tuskR);
 
-    // Fists
-    var fistGeo = new THREE.SphereGeometry(0.2, 5, 5);
-    var fistL = new THREE.Mesh(fistGeo, darkMat);
-    fistL.position.set(1.0, 0.9, 0);
-    g.add(fistL);
-    var fistR = fistL.clone();
-    fistR.position.x = -1.0;
-    g.add(fistR);
+    upper.add(headGroup);
 
-    // Legs — stumpy and powerful
-    var legGeo = new THREE.CylinderGeometry(0.25, 0.3, 0.8, 6);
-    var legL = new THREE.Mesh(legGeo, darkMat);
-    legL.position.set(0.35, 0.4, 0);
-    g.add(legL);
-    var legR = legL.clone();
-    legR.position.x = -0.35;
-    g.add(legR);
+    // === ARMS — long, hanging down like a gorilla ===
 
-    // Loincloth
-    var clothMat = new THREE.MeshStandardMaterial({ color: 0x5a3a1a, roughness: 0.9 });
-    var cloth = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.4, 0.6), clothMat);
-    cloth.position.y = 0.8;
-    g.add(cloth);
-
-    // Club — massive wooden weapon
+    // Right arm pivot (shoulder joint)
+    var armR = new THREE.Group();
+    armR.position.set(0.85, 0.9, 0);
+    armR.rotation.z = -0.15;
+    // Upper arm
+    var upperArmR = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.25, 1.0, 6), mat);
+    upperArmR.position.y = -0.5;
+    armR.add(upperArmR);
+    // Forearm — thicker, hangs further down
+    var forearmR = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.9, 6), mat);
+    forearmR.position.set(0, -1.1, 0.1);
+    forearmR.rotation.x = 0.2;
+    armR.add(forearmR);
+    // Fist
+    var fistR = new THREE.Mesh(new THREE.SphereGeometry(0.22, 4, 4), darkMat);
+    fistR.position.set(0, -1.6, 0.15);
+    armR.add(fistR);
+    // Club in right hand
     var clubMat = new THREE.MeshStandardMaterial({ color: 0x6a4a1a, roughness: 0.8, emissive: new THREE.Color(0x3a2510), emissiveIntensity: 0.3 });
-    var clubHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 2.0, 6), clubMat);
-    clubHandle.position.set(1.15, 1.8, 0.2);
-    clubHandle.rotation.z = -0.6;
-    g.add(clubHandle);
-    var clubHead = new THREE.Mesh(new THREE.SphereGeometry(0.25, 5, 5), clubMat);
-    clubHead.position.set(1.5, 2.8, 0.2);
-    g.add(clubHead);
+    var clubHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 1.8, 5), clubMat);
+    clubHandle.position.set(0.05, -1.0, 0.25);
+    clubHandle.rotation.x = 0.3;
+    armR.add(clubHandle);
+    // Club knob
+    var clubKnob = new THREE.Mesh(new THREE.SphereGeometry(0.2, 4, 4), clubMat);
+    clubKnob.position.set(0.05, -0.15, 0.5);
+    armR.add(clubKnob);
+    // Spikes on club
+    var spikeMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.6, roughness: 0.3 });
+    for (var sp = 0; sp < 3; sp++) {
+      var spike = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.15, 4), spikeMat);
+      spike.position.set(0.05 + Math.cos(sp * 2.1) * 0.18, -0.15, 0.5 + Math.sin(sp * 2.1) * 0.18);
+      spike.lookAt(new THREE.Vector3(0.05, -0.15, 0.5));
+      spike.rotateX(Math.PI / 2);
+      armR.add(spike);
+    }
+    upper.add(armR);
 
-    g.rotation.y = Math.PI / 2;
-    if (cfg.speed < 0) g.rotation.y = -Math.PI / 2;
+    // Left arm
+    var armL = new THREE.Group();
+    armL.position.set(-0.85, 0.9, 0);
+    armL.rotation.z = 0.15;
+    var upperArmL = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.25, 1.0, 6), mat);
+    upperArmL.position.y = -0.5;
+    armL.add(upperArmL);
+    var forearmL = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.9, 6), mat);
+    forearmL.position.set(0, -1.1, 0.1);
+    forearmL.rotation.x = 0.2;
+    armL.add(forearmL);
+    var fistL = new THREE.Mesh(new THREE.SphereGeometry(0.22, 4, 4), darkMat);
+    fistL.position.set(0, -1.6, 0.15);
+    armL.add(fistL);
+    upper.add(armL);
+
+    g.add(upper);
+
+    // === WAIST — loincloth/belt ===
+    var clothMat = new THREE.MeshStandardMaterial({ color: 0x5a3a1a, roughness: 0.9, emissive: new THREE.Color(0x2a1a08), emissiveIntensity: 0.2 });
+    var belt = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.5, 0.35, 8), clothMat);
+    belt.position.y = 0.95;
+    g.add(belt);
+    // Hanging loincloth front flap
+    var flap = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.08), clothMat);
+    flap.position.set(0, 0.65, 0.4);
+    g.add(flap);
+
+    // === LEGS — short, bowed, powerful stumps ===
+    var legGeo = new THREE.CylinderGeometry(0.28, 0.32, 0.7, 6);
+
+    var legLPivot = new THREE.Group();
+    legLPivot.position.set(0.3, 0.85, 0);
+    var legLMesh = new THREE.Mesh(legGeo, darkMat);
+    legLMesh.position.y = -0.35;
+    legLPivot.add(legLMesh);
+    // Big flat foot
+    var footMat = new THREE.MeshStandardMaterial({ color: skinColor.clone().multiplyScalar(0.55), roughness: 0.9 });
+    var footL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.12, 0.55), footMat);
+    footL.position.set(0, -0.75, 0.12);
+    legLPivot.add(footL);
+    g.add(legLPivot);
+
+    var legRPivot = new THREE.Group();
+    legRPivot.position.set(-0.3, 0.85, 0);
+    var legRMesh = new THREE.Mesh(legGeo, darkMat);
+    legRMesh.position.y = -0.35;
+    legRPivot.add(legRMesh);
+    var footR = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.12, 0.55), footMat);
+    footR.position.set(0, -0.75, 0.12);
+    legRPivot.add(footR);
+    g.add(legRPivot);
+
+    if (cfg.speed < 0) g.rotation.y = Math.PI;
     g.position.set(cfg.x, 0, cfg.phase || 0);
 
     scene.add(g);
-    traffic.push({ type: "ogre", mesh: g, cfg: cfg });
+    traffic.push({
+      type: "ogre", mesh: g, cfg: cfg,
+      upper: upper, legL: legLPivot, legR: legRPivot, armL: armL, armR: armR,
+    });
   }
 
   // ─── Catapult ───
@@ -1872,15 +2261,40 @@ var MedievalKingdom = (function () {
       if (v.type === "wagon") {
         v.mesh.position.x += v.cfg.speed * dt;
         if (v.mesh.position.x > 65) v.mesh.position.x = -65;
+        // Animate horse legs — trotting gait
+        if (v.horseLegRefs) {
+          var trot = t * 6.0;
+          for (var hi = 0; hi < v.horseLegRefs.length; hi++) {
+            var legs = v.horseLegRefs[hi];
+            var offset = hi * 0.5;
+            // Diagonal pairs: front-left+rear-right, front-right+rear-left
+            legs[0].rotation.x = Math.sin(trot + offset) * 0.4;            // front left
+            legs[1].rotation.x = Math.sin(trot + offset + Math.PI) * 0.4;  // front right
+            legs[2].rotation.x = Math.sin(trot + offset + Math.PI) * 0.4;  // rear left
+            legs[3].rotation.x = Math.sin(trot + offset) * 0.4;            // rear right
+          }
+        }
       }
 
       if (v.type === "ogre") {
         var c = v.cfg;
         v.mesh.position.z += c.speed * dt;
-        // Heavy lumbering stride
-        v.mesh.position.y = Math.abs(Math.sin(t * 2.5 + i * 2)) * 0.2;
-        // Slight sway side to side
-        v.mesh.rotation.z = Math.sin(t * 2.5 + i * 3) * 0.06;
+
+        var stride = t * 3.0 + i * 2.3;
+        // Heavy, slow leg swing — short bowed legs don't move much
+        v.legL.rotation.x = Math.sin(stride) * 0.4;
+        v.legR.rotation.x = Math.sin(stride + Math.PI) * 0.4;
+        // Arms swing loose and heavy, slightly out of phase — gorilla sway
+        v.armR.rotation.x = Math.sin(stride + Math.PI) * 0.35;
+        v.armR.rotation.z = -0.15 + Math.sin(stride * 0.5) * 0.08;
+        v.armL.rotation.x = Math.sin(stride) * 0.4;
+        v.armL.rotation.z = 0.15 - Math.sin(stride * 0.5) * 0.08;
+        // Heavy thudding bob
+        v.mesh.position.y = Math.abs(Math.sin(stride * 2)) * 0.08;
+        // Upper body rocks side to side as weight shifts between legs
+        v.upper.rotation.x = 0.2 + Math.sin(stride * 2) * 0.04;
+        v.upper.rotation.z = Math.sin(stride) * 0.06;
+
         if (c.speed > 0 && v.mesh.position.z > 14) v.mesh.position.z = -22;
         if (c.speed < 0 && v.mesh.position.z < -22) v.mesh.position.z = 14;
       }
@@ -1974,7 +2388,7 @@ var MedievalKingdom = (function () {
     labelContainer.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;";
     container.appendChild(labelContainer);
 
-    var names = { village: "The Village", township: "The Township", fortress: "The Fortress" };
+    var names = { village: "Village — Create", township: "Township — Test", fortress: "Fortress — Deploy" };
     var colors = { village: "#74c69d", township: "#c77dff", fortress: "#e5383b" };
 
     Object.keys(names).forEach(function (k) {
@@ -2372,51 +2786,78 @@ var MedievalKingdom = (function () {
 
 (function () {
   var districtHeadings = {
-    village:  { icon: "🏡", title: "The Village" },
-    township: { icon: "🏰", title: "The Township" },
-    fortress: { icon: "⚔️", title: "The Fortress" },
+    village:  { icon: "⚒️", title: "The Village — Create" },
+    township: { icon: "🏰", title: "The Township — Test" },
+    fortress: { icon: "⚔️", title: "The Fortress — Deploy" },
   };
 
   var districtMenuItems = {
     village: [
-      { label: "Peasant Provisions — Inventory & Resources" },
-      { label: "The Blacksmith — Forge thy Playbooks" },
-      { label: "Village Patrol — Monitor & Protect" },
+      { label: "⚒️ The Blacksmith's Hammer — ansible-creator" },
+      { label: "🗡️ The Whetstone — ansible-lint" },
+      { label: "⚗️ The Alchemist's Mortar — ade" },
     ],
     township: [
-      { label: "Guild Assembly — Orchestrate thy Workflows" },
-      { label: "The Alchemist — Transform & Remediate" },
-      { label: "Town Crier — Alerts & Notifications" },
+      { label: "🔨 The War Mace — Molecule" },
+      { label: "🏹 The Crossbow — pytest-ansible" },
+      { label: "⚔️ The Battle Axe — tox-ansible" },
     ],
     fortress: [
-      { label: "The War Room — Strategic Automation" },
-      { label: "Dragon's Vault — Secrets & Credentials" },
-      { label: "The Siege Engine — Scale & Deploy" },
+      { label: "🏰 The Siege Tower — ansible-builder" },
+      { label: "🛡️ The Royal Seal — ansible-sign" },
+      { label: "🧭 The Enchanted Compass — ansible-navigator" },
     ],
   };
 
   var districtInfoContent = {
     village: {
-      "Peasant Provisions — Inventory & Resources": { title: "Peasant Provisions", text: "Every great kingdom begins with knowing its people and lands. The Ansible Inventory tracks every host, every group — thy entire domain mapped and accounted for. From the humblest cottage to the tallest watchtower, all resources stand ready at thy command." },
-      "The Blacksmith — Forge thy Playbooks": { title: "The Blacksmith's Forge", text: "In the heat of the forge, raw intent becomes tempered steel. Ansible Playbooks are thy master blueprints — declarative, repeatable, and powerful. The Blacksmith shapes YAML into automated actions that ring true across thy entire realm." },
-      "Village Patrol — Monitor & Protect": { title: "Village Patrol", text: "The Village Patrol keeps watch through day and night. With Event-Driven Ansible, thy sentinels respond to threats before they breach the gates. Automated remediation turns every alert into decisive action." },
+      "⚒️ The Blacksmith's Hammer — ansible-creator": {
+        title: "⚒️ The Blacksmith's Hammer — ansible-creator",
+        text: "Every great quest begins at the forge. The ansible-creator CLI scaffolds new Ansible collections, roles, and plugins with a single strike of the hammer — generating the proper directory layout, galaxy.yml, tests, and metadata so thy project starts with a battle-tested foundation.\n\nForge a new collection:\n  ansible-creator init collection myns.mycollection ./src\n\nOr use the VS Code Ansible extension's Collection Project wizard to guide thee through the process with a visual interface. The Blacksmith ensures every piece of content follows the kingdom's standards from the very first line of YAML."
+      },
+      "🗡️ The Whetstone — ansible-lint": {
+        title: "🗡️ The Whetstone — ansible-lint",
+        text: "A dull blade serves no warrior. ansible-lint is thy Whetstone — it sharpens every playbook, role, and task file against the kingdom's best practices. It catches naming violations, deprecated syntax, risky patterns, and formatting sins before they reach the battlefield.\n\nSharpen thy blade:\n  ansible-lint --fix\n\nIn VS Code, enable the linter and set Lint Arguments to --fix. Each time thou savest a file, the Whetstone automatically hones thy code. Red squiggles mark the flaws; the --fix flag repairs what it can. What remains, thou must temper by hand — like naming thy plays, which no tool can divine for thee."
+      },
+      "⚗️ The Alchemist's Mortar — ade": {
+        title: "⚗️ The Alchemist's Mortar — ade (Ansible Dev Environment)",
+        text: "The Alchemist grinds raw ingredients into potent mixtures. ade (ansible-dev-environment) manages isolated development environments for thy collections — handling Python virtual environments, collection dependencies, and system package requirements with surgical precision.\n\nBrew thy environment:\n  ade install -e .    (editable — for active development)\n  ade install .       (frozen — for building and signing)\n  ade tree -v         (inspect the dependency tree)\n\nWhen thy collection depends on others (like ansible.netcommon), ade resolves the chain. It reads galaxy.yml dependencies, installs Python requirements, and warns thee of missing system packages. No more 'works on my machine' — the Alchemist ensures every adventurer brews the same potion."
+      },
     },
     township: {
-      "Guild Assembly — Orchestrate thy Workflows": { title: "The Guild Assembly", text: "In the great hall of the Township, the Guild Assembly convenes. Ansible Automation Controller orchestrates complex workflows across thy entire domain — scheduling, delegating, and coordinating like a council of master craftsmen." },
-      "The Alchemist — Transform & Remediate": { title: "The Alchemist's Tower", text: "The Alchemist transforms chaos into order. When systems drift from their intended state, the Alchemist's remediation playbooks restore harmony. Self-healing infrastructure is no mere fantasy — it is the power of automation made manifest." },
-      "Town Crier — Alerts & Notifications": { title: "The Town Crier", text: "Hear ye, hear ye! The Town Crier carries word throughout the realm. Integration with thy monitoring tools means no event goes unheard. From ServiceNow to Splunk, every guild receives the intelligence they need." },
+      "🔨 The War Mace — Molecule": {
+        title: "🔨 The War Mace — Molecule",
+        text: "The War Mace strikes with devastating force across the entire battlefield. Molecule provides full integration testing for thy Ansible roles and collections — spinning up real containers, running thy code against them, then verifying the results and tearing everything down.\n\nSwing the mace:\n  molecule test -s integration_hello_world\n  molecule converge    (run playbook only)\n  molecule verify      (run assertions only)\n  molecule login       (enter the test container)\n  molecule destroy     (tear down environment)\n\nMolecule's lifecycle: dependency → create → prepare → converge → verify → destroy. Define thy test scenarios in molecule.yml with platforms, provisioners, and verifiers. Write assertion tasks to confirm thy code did what it claimed. The War Mace leaves no stone unturned."
+      },
+      "🏹 The Crossbow — pytest-ansible": {
+        title: "🏹 The Crossbow — pytest-ansible",
+        text: "Where the War Mace is broad, the Crossbow is precise. pytest-ansible is a pytest plugin that lets thee write fast, targeted tests for individual Ansible modules and plugins — without spinning up full environments.\n\nTake aim:\n  pytest -v -s\n\nUse the ansible_module fixture in thy test files to call modules directly and assert on their return values. Set up a conftest.py with ANSIBLE_LIBRARY and ANSIBLE_COLLECTIONS_PATH so pytest knows where thy custom modules live.\n\nThe Crossbow excels at unit and functional testing — checking that a single module returns the right data, handles edge cases, or fails gracefully. Pair it with Molecule for full coverage: the Crossbow for precision, the War Mace for force."
+      },
+      "⚔️ The Battle Axe — tox-ansible": {
+        title: "⚔️ The Battle Axe — tox-ansible",
+        text: "The Battle Axe cleaves through multiple targets in a single sweep. tox-ansible auto-discovers and runs all thy tests — linting, unit, sanity, and integration — across multiple Python and ansible-core versions with minimal configuration.\n\nSwing wide:\n  tox list                          (see all discovered environments)\n  tox -e lint                       (run ansible-lint)\n  tox -e py311-ansible2.16-unit     (unit tests on specific versions)\n  tox -e py311-ansible2.16-molecule-integration_hello_world\n  tox -f ansible2.16                (all tests for one ansible version)\n\nA minimal tox.ini with [ansible] and ansible_core_versions is all thou needest. The Battle Axe discovers Molecule scenarios, pytest tests, and sanity checks automatically — convention over configuration. When thou must prove thy code works across the entire kingdom's infrastructure, the Battle Axe answers the call."
+      },
     },
     fortress: {
-      "The War Room — Strategic Automation": { title: "The War Room", text: "Deep within the Fortress, the War Room commands the full might of thy automation army. Ansible Lightspeed, powered by AI, accelerates thy strategies. What once took weeks now takes moments — the power of intelligent automation at thy fingertips." },
-      "Dragon's Vault — Secrets & Credentials": { title: "The Dragon's Vault", text: "Guarded by the fiercest protections, the Dragon's Vault secures thy most precious secrets. Ansible Vault encrypts credentials, API keys, and sensitive data with the strength of dragonfire. No intruder shall breach these defenses." },
-      "The Siege Engine — Scale & Deploy": { title: "The Siege Engine", text: "When the time comes to expand thy domain, the Siege Engine deploys with unstoppable force. Execution Environments ensure consistency across every battlefield. Container-native and cloud-ready, thy automation scales from village to empire." },
+      "🏰 The Siege Tower — ansible-builder": {
+        title: "🏰 The Siege Tower — ansible-builder",
+        text: "The Siege Tower carries thy entire army — code, dependencies, and tools — in a single deployable structure. ansible-builder creates Execution Environments (EEs): container images that package ansible-core, collections, Python libraries, and system packages into one portable artifact.\n\nConstruct the tower:\n  ansible-builder create            (generate Containerfile)\n  ansible-builder build -t my-ee -vvv  (build the image)\n  podman images                     (verify the build)\n  podman run my-ee ansible-galaxy collection list\n\nDefine thy EE in execution-environment.yml (v3): set the base image, Galaxy dependencies (including local tarballs via ansible-galaxy collection build), Python requirements, and system packages. The Siege Tower ensures that what works in development works identically in production — no missing libraries, no version drift, no excuses."
+      },
+      "🛡️ The Royal Seal — ansible-sign": {
+        title: "🛡️ The Royal Seal — ansible-sign",
+        text: "In a kingdom under siege, trust is everything. ansible-sign lets thee cryptographically sign and verify Ansible project directories using GPG — proving that thy automation content has not been tampered with from forge to battlefield.\n\nSeal thy work:\n  gpg --batch --gen-key key-config  (forge thy signet ring)\n  ansible-sign project gpg-sign .   (sign the project)\n  ansible-sign project gpg-verify . (verify the seal)\n\nThe signing process uses MANIFEST.in to declare which files matter (include, global-exclude, prune), then computes checksums of every included file into .ansible-sign/sha256sum.txt, and GPG-signs that manifest. In Ansible Automation Platform, signed projects are verified on every sync — the Royal Seal guarantees thy supply chain is unbroken."
+      },
+      "🧭 The Enchanted Compass — ansible-navigator": {
+        title: "🧭 The Enchanted Compass — ansible-navigator",
+        text: "When the fog of war descends, the Enchanted Compass guides thee through the chaos. ansible-navigator is a terminal UI (TUI) that runs Ansible playbooks and lets thee drill into every play, task, and result with clarity no scroll of terminal output can match.\n\nNavigate the battlefield:\n  ansible-navigator run site.yml\n  ansible-navigator run site.yml --execution-environment-image my-ee --pull-policy never\n\nIn the TUI: select a play to see its tasks, select a task to see its results on each host, press ESC to retreat up. Navigator works with or without Execution Environments — in the Fortress, pair it with thy Siege Tower EE to run automation exactly as it will run in production.\n\nIn VS Code, right-click any playbook and choose 'Run with Ansible Navigator' to invoke it directly. The Compass ensures thou always knowest where thy automation stands."
+      },
     },
   };
 
   var guildData = {
-    warriors: { name: "Warriors Guild", icon: "⚔️" },
-    mages:    { name: "Mages Guild", icon: "🔮" },
-    rangers:  { name: "Rangers Guild", icon: "🏹" },
+    warriors: { name: "Warriors Guild — Execution", icon: "⚔️" },
+    mages:    { name: "Mages Guild — Creation", icon: "🔮" },
+    rangers:  { name: "Rangers Guild — Security", icon: "🏹" },
   };
 
   var currentDistrictId = null;
@@ -2565,14 +3006,73 @@ var MedievalKingdom = (function () {
     }, 400);
   }
 
+  var guildMenuItems = {
+    warriors: [
+      { label: "⚔️ ansible-playbook — The Commander's Blade", key: "playbook" },
+      { label: "🐉 Podman — The Siege Beast", key: "podman" },
+      { label: "📜 adt — The Quartermaster's Ledger", key: "adt" },
+    ],
+    mages: [
+      { label: "🔮 VS Code Ansible Extension — The Arcane Tome", key: "vscode" },
+      { label: "✨ ansible-galaxy — The Summoner's Circle", key: "galaxy" },
+      { label: "📖 galaxy.yml — The Spell Codex", key: "galaxyyml" },
+    ],
+    rangers: [
+      { label: "🗡️ ansible-test sanity — The Scout's Report", key: "sanity" },
+      { label: "🏹 MANIFEST.in — The Ranger's Map", key: "manifest" },
+      { label: "🛡️ GPG Keys — The Ranger's Sigil", key: "gpg" },
+    ],
+  };
+
+  var guildInfoData = {
+    warriors: {
+      playbook: {
+        title: "⚔️ ansible-playbook — The Commander's Blade",
+        text: "The most fundamental weapon in any Ansible warrior's arsenal. ansible-playbook executes thy playbooks against inventory — translating YAML declarations into real action across thy infrastructure.\n\nDraw thy blade:\n  ansible-playbook site.yml -i inventory/hosts\n  ansible-playbook mycowsay.yml --check    (dry run)\n  ansible-playbook deploy.yml -v           (verbose)\n\nIn VS Code, right-click any playbook and select 'Run Ansible Playbook' for immediate execution. The Commander's Blade is direct and decisive — it runs what thou writest, against the hosts thou choosest, with the precision of a seasoned general."
+      },
+      podman: {
+        title: "🐉 Podman — The Siege Beast",
+        text: "Podman is the container engine that powers thy Execution Environments — the great beast of burden that carries thy entire automation stack into battle. Unlike Docker, Podman runs daemonless and rootless, making it safer for the kingdom's infrastructure.\n\nCommand the beast:\n  podman images                                    (see thy EEs)\n  podman run my-ee ansible-galaxy collection list   (verify contents)\n  podman run my-ee ansible-doc -t module mycowsay   (inspect modules)\n  podman ps                                         (see running containers)\n\nMolecule uses Podman to spin up test containers, ansible-builder uses it to construct EEs, and ansible-navigator uses it to run playbooks inside EEs. The Siege Beast is the foundation upon which the Fortress stands."
+      },
+      adt: {
+        title: "📜 adt — The Quartermaster's Ledger",
+        text: "Before any campaign begins, the Quartermaster takes stock. The adt CLI is the unified command for the Ansible Dev Tools bundle — it reports the version of every tool in thy arsenal with a single command, ensuring thy forces are properly equipped.\n\nConsult the ledger:\n  adt --version\n\nThis reveals the versions of ansible-core, ansible-lint, molecule, ansible-builder, ansible-navigator, ansible-sign, ansible-creator, tox-ansible, pytest-ansible, and all other tools in the bundle. When something breaks, the Quartermaster's Ledger is the first scroll to consult.\n\nUpgrade thy arsenal:\n  pip3 install --upgrade ansible-dev-tools\n  pip3 install ansible-core==2.16.x     (pin a specific version)"
+      },
+    },
+    mages: {
+      vscode: {
+        title: "🔮 VS Code Ansible Extension — The Arcane Tome",
+        text: "The Arcane Tome transforms thy humble text editor into a spellcasting workshop. The Ansible extension for VS Code provides wizards, auto-completion, linting integration, and one-click execution — everything a mage needs to craft automation without leaving the tower.\n\nOpen the tome and discover:\n  • Collection Project wizard — scaffold a new collection\n  • Playbook Project wizard — scaffold a new playbook project\n  • Collection Plugin wizard — add a filter, module, or role\n  • Execution Environment wizard — generate execution-environment.yml\n  • Ansible sidebar — manage content from a visual interface\n  • Integrated linting — red squiggles and auto-fix on save\n  • Run Ansible Playbook / Run with Navigator — right-click to execute\n\nThe Arcane Tome is the interface that ties all the other tools together into a seamless development experience."
+      },
+      galaxy: {
+        title: "✨ ansible-galaxy — The Summoner's Circle",
+        text: "The Summoner's Circle conjures collections from the vast Ansible Galaxy and packages thy own creations for distribution. ansible-galaxy handles installing, building, and publishing collections — the standard way content travels between kingdoms.\n\nSummon and create:\n  ansible-galaxy collection install ansible.netcommon\n  ansible-galaxy collection build --output-path /tmp/\n  ansible-galaxy collection list\n\nWhen building Execution Environments, the Siege Tower (ansible-builder) calls upon the Summoner's Circle to install collections from Galaxy or from local tarballs. Every collection in thy EE was summoned through this circle.\n\nThe tarball produced by 'collection build' is also what the Royal Seal (ansible-sign) protects — sign it, and it carries thy mark across any realm."
+      },
+      galaxyyml: {
+        title: "📖 galaxy.yml — The Spell Codex",
+        text: "Every collection has its Spell Codex — the galaxy.yml file at the root that declares the collection's identity, version, dependencies, and metadata. Without it, the Summoner's Circle cannot build nor install thy work.\n\nKey incantations:\n  namespace: myns\n  name: mycollection\n  version: 1.0.0\n  dependencies:\n    ansible.netcommon: \">=5.0.0\"\n  description: A collection of mighty automation spells\n\nWhen ade (the Alchemist's Mortar) reads thy dependencies, it reads this codex. When ansible-galaxy builds thy tarball, it reads this codex. When tox-ansible discovers test environments, it reads this codex. The Spell Codex is the single source of truth for thy collection's identity."
+      },
+    },
+    rangers: {
+      sanity: {
+        title: "🗡️ ansible-test sanity — The Scout's Report",
+        text: "Before the army marches, the scouts report. ansible-test sanity runs a battery of static checks against thy collection: import validation, documentation completeness, Python compatibility, and dozens more tests that ensure thy code meets Ansible's quality standards.\n\nDispatch the scouts:\n  ansible-test sanity\n\ntox-ansible auto-discovers sanity tests and wraps them into tox environments, so thou canst run them alongside linting and unit tests with a single command:\n  tox -e sanity\n\nSanity checks catch issues that ansible-lint does not — like broken imports, missing documentation fragments, and incompatible Python syntax. The Scout's Report and the Whetstone (ansible-lint) together form the kingdom's first line of defense."
+      },
+      manifest: {
+        title: "🏹 MANIFEST.in — The Ranger's Map",
+        text: "The Ranger's Map determines which paths are protected by the Royal Seal. MANIFEST.in is a file at the root of thy project that declares which files should be included in the signature checksum — and which should be excluded.\n\nChart the map:\n  include playbooks/*.yml\n  include roles/**\n  include collections/requirements.yml\n  global-exclude *.pyc\n  global-exclude .git/**\n  prune .tox\n  prune __pycache__\n\nWhen ansible-sign computes the SHA256 checksums for signing, it follows this map exactly. Including too little means tampering goes undetected. Including too much means legitimate changes (like .pyc files) break verification. The Ranger's Map requires the precision of an expert tracker."
+      },
+      gpg: {
+        title: "🛡️ GPG Keys — The Ranger's Sigil",
+        text: "Every ranger carries a unique sigil — a mark that proves their identity. GPG (GNU Privacy Guard) keys are the cryptographic foundation of ansible-sign. Thy private key signs the project manifest; thy public key lets others verify the seal.\n\nForge thy sigil:\n  gpg --batch --gen-key <<EOF\n  %no-protection\n  Key-Type: RSA\n  Key-Length: 4096\n  Name-Real: Ansible Ranger\n  Name-Email: ranger@kingdom.io\n  EOF\n\n  gpg --list-secret-keys               (verify the sigil)\n  ansible-sign project gpg-sign .      (apply the sigil)\n  ansible-sign project gpg-verify .    (verify another's sigil)\n\nIn Ansible Automation Platform, register thy public key as a credential. When projects sync from Git, AAP verifies the GPG signature automatically — ensuring no impostor has tampered with thy code."
+      },
+    },
+  };
+
   function buildGuildMenu(guildId) {
     var menuItems = document.getElementById("guild-menu-items");
     menuItems.innerHTML = "";
-    var items = [
-      { label: "Guild Charter", action: "charter" },
-      { label: "Quests & Missions", action: "quests" },
-      { label: "Armory & Artifacts", action: "armory" },
-    ];
+    var items = guildMenuItems[guildId] || [];
     items.forEach(function (item) {
       var btn = document.createElement("div");
       btn.className = "guild-menu-btn";
@@ -2592,9 +3092,15 @@ var MedievalKingdom = (function () {
   }
 
   function showGuildInfo(guildId, item) {
-    var guild = guildData[guildId];
-    document.getElementById("info-title").textContent = guild.name + " — " + item.label;
-    document.getElementById("info-text").textContent = "The " + guild.name + " " + item.label.toLowerCase() + " awaits brave adventurers. Rally thy forces and let the power of Ansible automation guide thy quest to victory!";
+    var data = guildInfoData[guildId] && guildInfoData[guildId][item.key];
+    if (data) {
+      document.getElementById("info-title").textContent = data.title;
+      document.getElementById("info-text").textContent = data.text;
+    } else {
+      var guild = guildData[guildId];
+      document.getElementById("info-title").textContent = guild.name + " — " + item.label;
+      document.getElementById("info-text").textContent = "Details coming soon...";
+    }
     document.getElementById("info-overlay").classList.add("visible");
     document.getElementById("overlay-close-btn").classList.add("visible");
   }
