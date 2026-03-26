@@ -1022,16 +1022,16 @@ var MedievalKingdom = (function () {
 
   function addMountains() {
     var mtMat = new THREE.MeshStandardMaterial({
-      color: 0x3a4a5a, roughness: 0.85, metalness: 0.1,
-      emissive: new THREE.Color(0x0a1520), emissiveIntensity: 0.35,
+      color: 0x5a6a7a, roughness: 0.85, metalness: 0.1,
+      emissive: new THREE.Color(0x2a3545), emissiveIntensity: 0.6,
     });
     var snowMat = new THREE.MeshStandardMaterial({
-      color: 0x8899aa, roughness: 0.6, metalness: 0.1,
-      emissive: new THREE.Color(0x2a3a4a), emissiveIntensity: 0.4,
+      color: 0xccddee, roughness: 0.5, metalness: 0.1,
+      emissive: new THREE.Color(0x667788), emissiveIntensity: 0.7,
     });
     var hillMat = new THREE.MeshStandardMaterial({
-      color: 0x1a4a22, roughness: 0.85, metalness: 0.05,
-      emissive: new THREE.Color(0x082a0a), emissiveIntensity: 0.3,
+      color: 0x2a6a32, roughness: 0.85, metalness: 0.05,
+      emissive: new THREE.Color(0x154a18), emissiveIntensity: 0.5,
     });
 
     // Big mountains along the back (negative Z — behind guild area)
@@ -1106,9 +1106,9 @@ var MedievalKingdom = (function () {
     var bList = [];
     var style = DISTRICT_STYLES[id];
 
-    var vRoadHalf = 2.2;
+    var vRoadHalf = 3.8;
     var hRoadWorldZ = 14;
-    var hRoadHalf = 2.2;
+    var hRoadHalf = 3.8;
 
     for (var x = -10; x <= 10; x += 3.2) {
       for (var z = -9; z <= 9; z += 3.2) {
@@ -1596,25 +1596,36 @@ var MedievalKingdom = (function () {
   // ─── Stars ───
 
   function addStars() {
-    var n = 300;
+    var n = 800;
     var pos = new Float32Array(n * 3);
+    var sizes = new Float32Array(n);
+    var phases = new Float32Array(n);
     for (var i = 0; i < n; i++) {
       var theta = Math.random() * Math.PI * 2;
-      var phi = Math.random() * Math.PI * 0.4;
-      var r = 150 + Math.random() * 50;
+      var phi = Math.random() * Math.PI * 0.45;
+      var r = 120 + Math.random() * 40;
       pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       pos[i * 3 + 1] = r * Math.cos(phi);
       pos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+      sizes[i] = 0.5 + Math.random() * 1.2;
+      phases[i] = Math.random() * Math.PI * 2;
     }
     var geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
+
+    starPhases = phases;
+    starBaseSizes = sizes.slice();
+
     var mat = new THREE.PointsMaterial({
-      color: 0xffffff, size: 0.3, transparent: true, opacity: 0.7,
+      color: 0xeeeeff, size: 1.0, transparent: true, opacity: 0.85,
       blending: THREE.AdditiveBlending, depthWrite: false,
+      sizeAttenuation: true, fog: false,
     });
     stars = new THREE.Points(geo, mat);
     scene.add(stars);
   }
+  var starPhases, starBaseSizes;
 
   // ─── Traffic (Medieval) ───
 
@@ -2267,11 +2278,10 @@ var MedievalKingdom = (function () {
           for (var hi = 0; hi < v.horseLegRefs.length; hi++) {
             var legs = v.horseLegRefs[hi];
             var offset = hi * 0.5;
-            // Diagonal pairs: front-left+rear-right, front-right+rear-left
-            legs[0].rotation.x = Math.sin(trot + offset) * 0.4;            // front left
-            legs[1].rotation.x = Math.sin(trot + offset + Math.PI) * 0.4;  // front right
-            legs[2].rotation.x = Math.sin(trot + offset + Math.PI) * 0.4;  // rear left
-            legs[3].rotation.x = Math.sin(trot + offset) * 0.4;            // rear right
+            legs[0].rotation.z = Math.sin(trot + offset) * 0.35;
+            legs[1].rotation.z = Math.sin(trot + offset + Math.PI) * 0.35;
+            legs[2].rotation.z = Math.sin(trot + offset + Math.PI) * 0.35;
+            legs[3].rotation.z = Math.sin(trot + offset) * 0.35;
           }
         }
       }
@@ -2713,9 +2723,17 @@ var MedievalKingdom = (function () {
       particles.material.opacity = 0.35 + Math.sin(t * 0.8) * 0.15;
     }
 
-    // Star twinkle
-    if (stars) {
-      stars.material.opacity = 0.5 + Math.sin(t * 0.3) * 0.2;
+    // Star twinkle — per-star shimmer
+    if (stars && starPhases && starBaseSizes) {
+      var sa = stars.geometry.attributes.position.array;
+      for (var si = 0; si < starPhases.length; si++) {
+        var twinkle = Math.sin(t * (2.0 + (si % 7) * 0.5) + starPhases[si]);
+        var brightness = twinkle > 0.7 ? 1.5 : (twinkle > 0.3 ? 1.0 : 0.6);
+        sa[si * 3 + 1] += Math.sin(t * 0.1 + starPhases[si]) * 0.002 * brightness;
+      }
+      stars.geometry.attributes.position.needsUpdate = true;
+      stars.material.opacity = 0.7 + Math.sin(t * 0.5) * 0.15;
+      stars.material.size = 0.9 + Math.sin(t * 1.5) * 0.15;
     }
 
     animateTraffic(t, dt);
