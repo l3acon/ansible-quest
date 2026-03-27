@@ -331,7 +331,7 @@ html, body {
     text-transform: uppercase;
     margin-bottom: 30px;
 }
-#death-screen .death-restart {
+.death-restart {
     font-family: 'MedievalSharp', cursive;
     font-size: 22px;
     color: #ffd700;
@@ -342,8 +342,9 @@ html, body {
     background: rgba(40, 20, 5, 0.8);
     transition: all 0.2s ease;
     letter-spacing: 2px;
+    text-align: center;
 }
-#death-screen .death-restart:hover, #win-screen .death-restart:hover {
+.death-restart:hover {
     background: rgba(60, 30, 10, 0.9);
     border-color: rgba(255, 200, 80, 0.7);
     transform: scale(1.05);
@@ -505,7 +506,7 @@ html, body {
 #win-screen.visible { opacity: 1; pointer-events: auto; }
 #win-story-wrap {
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0; left: 0; right: 0; bottom: 160px;
     overflow: hidden;
 }
 #win-story-scroll {
@@ -514,14 +515,24 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    animation: storyScroll 45s linear forwards;
+    animation: storyScroll 35s linear forwards;
     padding: 0 20px;
 }
 @keyframes storyScroll {
-    0% { top: 100%; }
-    100% { top: -220%; }
+    0% { top: 80%; }
+    100% { top: -180%; }
 }
-#win-story-scroll .ws-spacer { height: 40vh; flex-shrink: 0; }
+#win-story-scroll .ws-spacer { height: 20vh; flex-shrink: 0; }
+#win-bottom-panel {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 20px 24px;
+    background: linear-gradient(to top, rgba(0,0,0,0.95) 60%, transparent);
+    z-index: 2;
+}
 #win-story-scroll .ws-line {
     font-family: 'MedievalSharp', cursive;
     font-size: 22px;
@@ -553,6 +564,190 @@ html, body {
     font-size: 28px;
     color: #ffd700;
     letter-spacing: 3px;
+}
+/* Chest overlay */
+#chest-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+#chest-overlay.visible { opacity: 1; pointer-events: auto; }
+#chest-panel {
+    position: relative;
+    max-width: 600px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: rgba(15, 10, 5, 0.95);
+    border: 2px solid rgba(255, 200, 80, 0.3);
+    border-radius: 10px;
+    padding: 30px 28px 24px;
+    box-shadow: 0 0 40px rgba(255, 200, 80, 0.1), 0 8px 32px rgba(0,0,0,0.6);
+}
+#chest-overlay .chest-title {
+    font-family: 'Cinzel', serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: #ffd700;
+    text-shadow: 0 0 15px rgba(255, 200, 50, 0.4);
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    text-align: center;
+    padding-right: 30px;
+}
+#chest-overlay .chest-text {
+    font-family: 'MedievalSharp', cursive;
+    font-size: 15px;
+    color: rgba(255, 220, 150, 0.8);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    margin-bottom: 20px;
+    text-align: left;
+}
+#chest-quiz { max-width: 560px; width: 100%; }
+.quiz-q {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    color: #ffd700;
+    margin-bottom: 14px;
+    text-align: center;
+}
+.quiz-opt {
+    display: block;
+    width: 100%;
+    padding: 10px 16px;
+    margin-bottom: 8px;
+    font-family: 'MedievalSharp', cursive;
+    font-size: 16px;
+    color: rgba(255, 220, 150, 0.85);
+    background: rgba(30, 20, 5, 0.8);
+    border: 1px solid rgba(255, 200, 80, 0.25);
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s, border-color 0.2s;
+}
+.quiz-opt:hover { background: rgba(60, 30, 10, 0.85); border-color: rgba(255, 140, 40, 0.5); }
+.quiz-opt.correct { background: rgba(20, 80, 20, 0.8); border-color: rgba(80, 255, 80, 0.6); color: #88ff88; }
+.quiz-opt.wrong { background: rgba(80, 20, 20, 0.8); border-color: rgba(255, 80, 80, 0.6); color: #ff8888; }
+.quiz-result {
+    font-family: 'Cinzel', serif;
+    font-size: 20px;
+    text-align: center;
+    margin-top: 14px;
+    letter-spacing: 2px;
+}
+#chest-close-x {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    color: rgba(255, 200, 80, 0.7);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(60, 30, 10, 0.8);
+    border: 1px solid rgba(255, 200, 80, 0.3);
+    border-radius: 50%;
+    transition: background 0.2s, color 0.2s;
+    z-index: 2;
+}
+#chest-close-x:hover { background: rgba(157, 2, 8, 0.7); color: #ffd700; }
+#quest-tracker {
+    position: absolute;
+    top: 2vh;
+    right: 3vw;
+    z-index: 10;
+    font-family: 'Cinzel', serif;
+    background: rgba(15, 10, 5, 0.85);
+    border: 1px solid rgba(255, 200, 80, 0.25);
+    border-radius: 6px;
+    padding: 10px 18px;
+    min-width: 180px;
+    transition: opacity 0.3s ease;
+}
+#quest-tracker-title {
+    font-size: 11px;
+    color: rgba(255, 200, 80, 0.6);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+#quest-tracker-bar-wrap {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 200, 80, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+#quest-tracker-bar-inner {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #88ff88, #ffd700);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+#quest-tracker-text {
+    font-size: 13px;
+    color: #ffd700;
+    letter-spacing: 1px;
+}
+#quest-tracker.hidden { display: none; }
+#quest-tracker.explore-mode { top: 12vh; }
+.quest-continue-btn {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #2a8a2a, #3cb43c);
+    border: 2px solid rgba(80, 255, 80, 0.4);
+    border-radius: 8px;
+    padding: 12px 40px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: all 0.2s ease;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 16px rgba(60, 180, 60, 0.3);
+}
+.quest-continue-btn:hover {
+    background: linear-gradient(135deg, #3cb43c, #50d050);
+    border-color: rgba(80, 255, 80, 0.7);
+    transform: scale(1.05);
+    box-shadow: 0 6px 24px rgba(60, 180, 60, 0.5);
+}
+#chest-prompt {
+    position: absolute;
+    bottom: 15vh;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 11;
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    color: #ffd700;
+    background: rgba(20, 10, 5, 0.8);
+    border: 1px solid rgba(255, 200, 80, 0.3);
+    border-radius: 6px;
+    padding: 8px 20px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 8px rgba(255, 200, 80, 0.3);
+    animation: promptPulse 1.5s ease-in-out infinite;
+}
+#chest-prompt.hidden { display: none; }
+@keyframes promptPulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; border-color: rgba(255, 200, 80, 0.6); }
 }
 #win-buttons {
     display: flex;
@@ -784,6 +979,14 @@ html, body {
     color: #ffd700;
 }
 
+.menu-item-text.collected {
+    border-color: rgba(80, 255, 80, 0.3);
+}
+.menu-check {
+    color: #88ff88;
+    font-weight: bold;
+    margin-right: 4px;
+}
 .menu-item-text.on {
     background-color: rgba(80, 50, 15, 0.9);
     border-color: rgba(255, 200, 80, 0.5);
@@ -1016,6 +1219,17 @@ html, body {
             <div class="info-card">
                 <h2 id="info-title"></h2>
                 <p id="info-text"></p>
+                <div class="death-restart" id="info-quiz-btn" style="display:none; margin-top:16px; font-size:16px; padding:8px 24px;">Take Quiz</div>
+                <div id="info-quiz" style="display:none; margin-top:16px; width:100%;">
+                    <div class="quiz-q" id="info-quiz-question"></div>
+                    <div id="info-quiz-options"></div>
+                    <div class="quiz-result" id="info-quiz-result"></div>
+                </div>
+                <div id="info-success" style="display:none; margin-top:20px; text-align:center;">
+                    <div id="info-success-msg" style="font-family:'Cinzel',serif; font-size:20px; color:#88ff88; margin-bottom:10px;">✓ Chest Unlocked! +100 pts</div>
+                    <div id="info-remaining" style="font-family:'MedievalSharp',cursive; font-size:14px; color:rgba(255,220,150,0.7); margin-bottom:16px;"></div>
+                    <div class="quest-continue-btn" id="info-continue-btn">Continue</div>
+                </div>
             </div>
         </div>
         <div id="overlay-close-btn" aria-label="Close">&times;</div>
@@ -1042,7 +1256,7 @@ html, body {
             <div id="explore-hud" class="hidden">
                 <div id="explore-hud-inner">
                     <span>⚔️ EXPLORE MODE</span>
-                    <span class="explore-keys">WASD to move · Mouse to look · Click to swing · ESC to exit</span>
+                    <span class="explore-keys">WASD to move · Mouse to look · Click to swing · E to open chests · ESC to exit</span>
                 </div>
             </div>
             <div id="kill-counter" class="hidden">
@@ -1063,7 +1277,6 @@ html, body {
             <div id="win-screen">
                 <div id="win-story-wrap">
                     <div id="win-story-scroll">
-                        <div class="ws-spacer"></div>
                         <p class="ws-line">In a realm beset by ogres and darkness...</p>
                         <p class="ws-line">A lone knight rose from the village campfire,</p>
                         <p class="ws-line">armed with nothing but a sword, a torch,</p>
@@ -1093,21 +1306,41 @@ html, body {
                         <p class="ws-line ws-gap">&nbsp;</p>
                         <p class="ws-line ws-title">⚔️ Victory! ⚔️</p>
                         <p class="ws-line ws-score" id="win-score"></p>
-                        <p class="ws-line ws-gap">&nbsp;</p>
-                        <div id="win-name-row">
-                            <label for="win-name-input">Enter thy name:</label>
-                            <input type="text" id="win-name-input" maxlength="16" placeholder="Hero" autocomplete="off" />
-                            <button id="win-submit" class="death-restart">Submit</button>
-                        </div>
-                        <div id="win-leaderboard"></div>
-                        <div id="win-buttons" style="display:none;">
-                            <div class="death-restart" id="win-restart">Play Again?</div>
-                            <div class="death-restart" id="win-home">Return Home</div>
-                        </div>
                         <div class="ws-spacer"></div>
                     </div>
                 </div>
+                <div id="win-bottom-panel">
+                    <div id="win-name-row">
+                        <label for="win-name-input">Enter thy name:</label>
+                        <input type="text" id="win-name-input" maxlength="16" placeholder="Hero" autocomplete="off" />
+                        <button id="win-submit" class="death-restart">Submit</button>
+                    </div>
+                    <div id="win-leaderboard"></div>
+                    <div id="win-buttons" style="display:none;">
+                        <div class="death-restart" id="win-restart">Play Again?</div>
+                        <div class="death-restart" id="win-home">Return Home</div>
+                    </div>
+                </div>
             </div>
+            <div id="chest-overlay">
+                <div id="chest-panel">
+                    <div id="chest-close-x" title="Close (ESC)">&times;</div>
+                    <div class="chest-title" id="chest-title"></div>
+                    <div class="chest-text" id="chest-text"></div>
+                    <div class="death-restart" id="chest-earn-btn">Earn This Chest</div>
+                    <div id="chest-quiz" style="display:none;">
+                        <div class="quiz-q" id="quiz-question"></div>
+                        <div id="quiz-options"></div>
+                        <div class="quiz-result" id="quiz-result"></div>
+                    </div>
+                    <div id="chest-success" style="display:none; margin-top:20px; text-align:center;">
+                        <div id="chest-success-msg" style="font-family:'Cinzel',serif; font-size:20px; color:#88ff88; margin-bottom:10px;">✓ Chest Unlocked! +100 pts</div>
+                        <div id="chest-remaining" style="font-family:'MedievalSharp',cursive; font-size:14px; color:rgba(255,220,150,0.7); margin-bottom:16px;"></div>
+                        <div class="quest-continue-btn" id="chest-continue-btn">Continue</div>
+                    </div>
+                </div>
+            </div>
+            <div id="chest-prompt" class="hidden">Press E to open chest</div>
             <div id="highscore-overlay">
                 <div id="hs-close-x" title="Close">&times;</div>
                 <div id="highscore-inner">
@@ -1115,6 +1348,13 @@ html, body {
                     <div id="hs-board"></div>
                     <div class="death-restart" id="hs-close">Return</div>
                 </div>
+            </div>
+            <div id="quest-tracker">
+                <div id="quest-tracker-title">Quest Progress</div>
+                <div id="quest-tracker-bar-wrap">
+                    <div id="quest-tracker-bar-inner"></div>
+                </div>
+                <div id="quest-tracker-text">0 / 9 Tools Mastered</div>
             </div>
             <div id="landing-bottom-bar">
                 <div id="explore-btn">🗡️ Explore</div>
@@ -1318,14 +1558,16 @@ var MedievalKingdom = (function () {
     makeDistrict("township",   0, 0, 0x7b2cbf, 0xc77dff);
     makeDistrict("fortress",  28, 0, 0x9d0208, 0xe5383b);
 
-    // Village campfires
+    // Village campfires only
     addCampfires(-28, 0);
-    // (moat removed)
+
+    // Knowledge chests
+    addChests();
   }
 
   function addCampfires(cx, cz) {
     // Place campfires safely outside the building grid (buildings span cx±10, cz±9)
-    var spots = [[cx - 13, cz + 3], [cx + 13, cz - 3], [cx - 13, cz - 5], [cx + 13, cz + 6]];
+    var spots = [[cx - 13, cz + 3], [cx + 13, cz - 3]];
     for (var i = 0; i < spots.length; i++) {
       var fx = spots[i][0], fz = spots[i][1];
       var fg = new THREE.Group();
@@ -1447,7 +1689,312 @@ var MedievalKingdom = (function () {
     }
   }
 
-  // (moat function removed)
+  // ─── Knowledge Chests ───
+
+  var _chests = [];
+  var _chestsCollected = 0;
+  var _totalChests = 9;
+
+  var chestToolMap = [
+    { id: "ansible-creator",    label: "ansible-creator",    district: "village",  key: "⚒️ The Blacksmith's Hammer — ansible-creator" },
+    { id: "ansible-lint",       label: "ansible-lint",       district: "village",  key: "🗡️ The Whetstone — ansible-lint" },
+    { id: "ade",                label: "ade",                district: "village",  key: "⚗️ The Alchemist's Mortar — ade" },
+    { id: "molecule",           label: "Molecule",           district: "township", key: "🔨 The War Mace — Molecule" },
+    { id: "pytest-ansible",     label: "pytest-ansible",     district: "township", key: "🏹 The Crossbow — pytest-ansible" },
+    { id: "tox-ansible",        label: "tox-ansible",        district: "township", key: "⚔️ The Battle Axe — tox-ansible" },
+    { id: "ansible-builder",    label: "ansible-builder",    district: "fortress", key: "🏰 The Siege Tower — ansible-builder" },
+    { id: "ansible-sign",       label: "ansible-sign",       district: "fortress", key: "🛡️ The Royal Seal — ansible-sign" },
+    { id: "ansible-navigator",  label: "ansible-navigator",  district: "fortress", key: "🧭 The Enchanted Compass — ansible-navigator" },
+  ];
+
+  var chestQuizData = {
+    "ansible-creator": [
+      { q: "What is the primary purpose of ansible-creator?", opts: ["To run Ansible playbooks in parallel", "To scaffold new Ansible collections, roles, and plugins", "To lint YAML files for syntax errors", "To manage container images for Ansible"], ans: 1 },
+      { q: "Which command scaffolds a new collection with ansible-creator?", opts: ["ansible-creator build myns.mycol", "ansible-creator init collection myns.mycol ./src", "ansible-creator new collection myns.mycol", "ansible-galaxy init collection myns.mycol"], ans: 1 },
+      { q: "What does ansible-creator generate as part of a new collection?", opts: ["A running container with ansible-core pre-installed", "SSH keys for connecting to managed hosts", "The proper directory layout, galaxy.yml, tests, and metadata", "A pre-configured Ansible Tower project"], ans: 2 },
+    ],
+    "ansible-lint": [
+      { q: "What is the primary purpose of ansible-lint?", opts: ["To execute Ansible playbooks faster", "To validate YAML syntax only", "To enforce best practices and detect issues in Ansible content", "To manage Ansible inventories dynamically"], ans: 2 },
+      { q: "Which command runs ansible-lint against a playbook named site.yml?", opts: ["ansible-playbook --lint site.yml", "ansible-lint site.yml", "ansible check site.yml", "ansible-validator site.yml"], ans: 1 },
+      { q: "What does ansible-lint typically flag?", opts: ["Network latency issues during playbook execution", "Deprecated modules, risky patterns, and style violations", "Missing SSH keys on managed hosts", "Incorrect inventory group names at runtime"], ans: 1 },
+    ],
+    "ade": [
+      { q: "What does ade (Ansible Dev Environment) manage?", opts: ["Production deployment pipelines", "Isolated development environments for collections", "Ansible Tower user permissions", "Container orchestration for EEs"], ans: 1 },
+      { q: "Which command installs a collection in editable mode with ade?", opts: ["ade setup --editable .", "ade install -e .", "ade dev mount .", "pip install -e ansible-collection"], ans: 1 },
+      { q: "What does 'ade tree -v' display?", opts: ["The git commit history of the project", "The collection's dependency tree", "A visual map of inventory hosts", "The file structure of ansible.cfg"], ans: 1 },
+    ],
+    "molecule": [
+      { q: "What is Molecule primarily used for?", opts: ["Linting Ansible playbooks for style issues", "Full integration testing of Ansible roles and collections", "Building and publishing container images", "Managing secrets and vault passwords"], ans: 1 },
+      { q: "What is the correct Molecule test lifecycle order?", opts: ["dependency → create → prepare → converge → verify → destroy", "build → deploy → test → clean → report", "init → run → check → validate → end", "prepare → execute → assert → teardown → publish"], ans: 0 },
+      { q: "Which Molecule command runs only the playbook without the full lifecycle?", opts: ["molecule run", "molecule converge", "molecule apply", "molecule execute"], ans: 1 },
+    ],
+    "pytest-ansible": [
+      { q: "What is pytest-ansible?", opts: ["A standalone test runner for Ansible", "A pytest plugin for testing Ansible modules and plugins", "A CI/CD pipeline tool for Ansible projects", "A linter extension for pytest configuration"], ans: 1 },
+      { q: "What fixture does pytest-ansible provide to call Ansible modules directly?", opts: ["ansible_runner", "ansible_module", "ansible_host", "ansible_exec"], ans: 1 },
+      { q: "What type of testing does pytest-ansible excel at?", opts: ["Full integration testing with live infrastructure", "Browser-based UI testing of AWX", "Unit and functional testing of individual modules", "Performance and load testing of playbooks"], ans: 2 },
+    ],
+    "tox-ansible": [
+      { q: "What does tox-ansible automatically discover?", opts: ["Docker images on the local registry", "Test scenarios across multiple Python and ansible-core versions", "Cloud provider endpoints for deployment", "SSH keys and vault passwords in the project"], ans: 1 },
+      { q: "Which command lists all discovered tox-ansible test environments?", opts: ["tox show --all", "tox list", "tox discover envs", "tox-ansible --list-envs"], ans: 1 },
+      { q: "What configuration principle does tox-ansible follow for test discovery?", opts: ["Explicit manifest-based registration", "Convention over configuration", "AI-powered automatic detection", "Manual YAML-based test mapping"], ans: 1 },
+    ],
+    "ansible-builder": [
+      { q: "What does ansible-builder create?", opts: ["Ansible playbooks from templates", "Execution Environments — container images with ansible-core and dependencies", "Virtual machines for testing roles", "Galaxy collection tarballs for publishing"], ans: 1 },
+      { q: "What file defines an Execution Environment for ansible-builder?", opts: ["Dockerfile", "execution-environment.yml", "ansible.cfg", "builder.conf"], ans: 1 },
+      { q: "Which ansible-builder command generates the Containerfile without actually building the image?", opts: ["ansible-builder create", "ansible-builder generate", "ansible-builder init", "ansible-builder dry-run"], ans: 0 },
+    ],
+    "ansible-sign": [
+      { q: "What cryptographic system does ansible-sign use to sign projects?", opts: ["AES-256 symmetric encryption", "RSA key pairs via OpenSSL", "GPG (GNU Privacy Guard)", "SHA-512 hash verification only"], ans: 2 },
+      { q: "What file does ansible-sign use to declare which files to include in the signature?", opts: ["sign.yml", "MANIFEST.in", ".gitignore", "checksums.json"], ans: 1 },
+      { q: "Which command verifies a signed Ansible project?", opts: ["ansible-sign verify project .", "ansible-sign project gpg-verify .", "gpg --verify ansible-project .", "ansible-sign check --gpg ."], ans: 1 },
+    ],
+    "ansible-navigator": [
+      { q: "What type of interface does ansible-navigator provide?", opts: ["A web-based dashboard", "A terminal user interface (TUI)", "A desktop GUI application", "A mobile companion app"], ans: 1 },
+      { q: "How do you run a playbook with a specific Execution Environment in ansible-navigator?", opts: ["ansible-navigator run site.yml --ee my-ee", "ansible-navigator run site.yml --execution-environment-image my-ee", "ansible-navigator exec site.yml --container my-ee", "ansible-navigator play site.yml --image my-ee"], ans: 1 },
+      { q: "Which key navigates back or exits in the ansible-navigator TUI?", opts: ["Q to quit", "Ctrl+C to terminate", "ESC to go back", "Backspace to return"], ans: 2 },
+    ],
+  };
+
+  function addChests() {
+    // Placed along roads and open grass — clear of buildings (cx±10, cz±9) and campfires
+    var positions = [
+      { x: -28, z:  17 },  // Village, north side of horizontal road
+      { x: -48, z: -4 },   // Far west of village, open grass
+      { x: -14, z: -15 },  // Between village & township, far south
+      { x:   0, z:  17 },  // Township, north side of horizontal road
+      { x: -14, z:  17 },  // Between village & township, north road
+      { x:  14, z:  17 },  // Between township & fortress, north road
+      { x:  28, z:  17 },  // Fortress, north side of horizontal road
+      { x:  48, z: -4 },   // Far east of fortress, open grass
+      { x:  14, z: -15 },  // Between township & fortress, far south
+    ];
+
+    var chestWood = new THREE.MeshStandardMaterial({ color: 0x8a5a2a, roughness: 0.7, emissive: new THREE.Color(0x3a2510), emissiveIntensity: 0.3 });
+    var chestMetal = new THREE.MeshStandardMaterial({ color: 0xccaa44, roughness: 0.4, metalness: 0.6, emissive: new THREE.Color(0x665522), emissiveIntensity: 0.3 });
+    var chestGlow = new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0.6 });
+
+    for (var i = 0; i < 9; i++) {
+      var tool = chestToolMap[i];
+      var pos = positions[i];
+      var g = new THREE.Group();
+
+      // Chest body
+      var body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 0.5), chestWood);
+      body.position.y = 0.25;
+      g.add(body);
+      // Lid (rounded top)
+      var lid = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.82, 8, 1, false, 0, Math.PI), chestWood);
+      lid.rotation.z = Math.PI / 2;
+      lid.rotation.y = Math.PI / 2;
+      lid.position.y = 0.5;
+      g.add(lid);
+      // Metal bands
+      for (var bi = -1; bi <= 1; bi++) {
+        var band = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.04, 0.52), chestMetal);
+        band.position.set(bi * 0.25, 0.25, 0);
+        g.add(band);
+      }
+      // Lock
+      var lock = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.12, 0.08), chestMetal);
+      lock.position.set(0, 0.35, 0.26);
+      g.add(lock);
+      // Glow ring on ground
+      var ring = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.7, 16), chestGlow);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.02;
+      g.add(ring);
+
+      // Floating label using canvas texture
+      var canvas = document.createElement("canvas");
+      canvas.width = 256;
+      canvas.height = 64;
+      var ctx = canvas.getContext("2d");
+      ctx.fillStyle = "rgba(20,10,5,0.85)";
+      ctx.fillRect(0, 0, 256, 64);
+      ctx.strokeStyle = "rgba(255,200,80,0.6)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(2, 2, 252, 60);
+      ctx.font = "bold 22px sans-serif";
+      ctx.fillStyle = "#ffd700";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(tool.label, 128, 32);
+      var tex = new THREE.CanvasTexture(canvas);
+      var labelMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false });
+      var labelMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), labelMat);
+      labelMesh.position.y = 1.2;
+      g.add(labelMesh);
+      labelMesh.userData._isChestLabel = true;
+
+      g.position.set(pos.x, 0, pos.z);
+      scene.add(g);
+
+
+      _chests.push({
+        group: g, label: labelMesh, x: pos.x, z: pos.z,
+        toolId: tool.id, toolKey: tool.key, district: tool.district,
+        collected: false,
+      });
+    }
+  }
+
+  function animateChestLabels() {
+    if (!camera) return;
+    for (var i = 0; i < _chests.length; i++) {
+      var c = _chests[i];
+      if (c.label) c.label.lookAt(camera.position);
+      // Gentle bob
+      c.group.children[0].position.y = 0.25 + Math.sin(performance.now() * 0.002 + i) * 0.03;
+    }
+  }
+
+  var _activeChestIdx = -1;
+  var _nearChestIdx = -1;
+  var _chestQuizActive = false;
+  var _usedQuestions = {};
+  var districtInfoContent = {};
+
+  function openChest(idx) {
+    var ch = _chests[idx];
+    if (ch.collected) return;
+    _activeChestIdx = idx;
+    _chestQuizActive = false;
+    var promptEl = document.getElementById("chest-prompt");
+    if (promptEl) promptEl.classList.add("hidden");
+
+    var info = null;
+    var dInfo = districtInfoContent[ch.district];
+    if (dInfo && dInfo[ch.toolKey]) info = dInfo[ch.toolKey];
+
+    var titleEl = document.getElementById("chest-title");
+    var textEl = document.getElementById("chest-text");
+    var earnBtn = document.getElementById("chest-earn-btn");
+    var quizDiv = document.getElementById("chest-quiz");
+    var resultEl = document.getElementById("quiz-result");
+
+    if (titleEl) titleEl.textContent = info ? info.title : ch.toolKey;
+    if (textEl) textEl.textContent = info ? info.text : "";
+    if (earnBtn) { earnBtn.style.display = ""; earnBtn.textContent = "Earn This Chest"; }
+    if (quizDiv) quizDiv.style.display = "none";
+    if (resultEl) resultEl.textContent = "";
+    document.getElementById("chest-success").style.display = "none";
+
+    document.getElementById("chest-overlay").classList.add("visible");
+  }
+
+  function startChestQuiz() {
+    var ch = _chests[_activeChestIdx];
+    var questions = chestQuizData[ch.toolId];
+    if (!questions) return;
+
+    if (!_usedQuestions[ch.toolId]) _usedQuestions[ch.toolId] = [];
+    var available = [];
+    for (var qi = 0; qi < questions.length; qi++) {
+      if (_usedQuestions[ch.toolId].indexOf(qi) === -1) available.push(qi);
+    }
+    if (available.length === 0) { _usedQuestions[ch.toolId] = []; available = []; for (var qi = 0; qi < questions.length; qi++) available.push(qi); }
+    var pick = available[Math.floor(Math.random() * available.length)];
+    _usedQuestions[ch.toolId].push(pick);
+
+    var q = questions[pick];
+    _chestQuizActive = true;
+
+    document.getElementById("chest-earn-btn").style.display = "none";
+    var quizDiv = document.getElementById("chest-quiz");
+    quizDiv.style.display = "";
+    document.getElementById("quiz-question").textContent = q.q;
+    document.getElementById("quiz-result").textContent = "";
+
+    var optsDiv = document.getElementById("quiz-options");
+    optsDiv.innerHTML = "";
+    for (var oi = 0; oi < q.opts.length; oi++) {
+      var btn = document.createElement("button");
+      btn.className = "quiz-opt";
+      btn.textContent = q.opts[oi];
+      btn.setAttribute("data-idx", oi);
+      btn.addEventListener("click", function () {
+        var selected = parseInt(this.getAttribute("data-idx"));
+        handleQuizAnswer(selected, q.ans);
+      });
+      optsDiv.appendChild(btn);
+    }
+  }
+
+  function handleQuizAnswer(selected, correct) {
+    var opts = document.querySelectorAll("#quiz-options .quiz-opt");
+    for (var i = 0; i < opts.length; i++) {
+      opts[i].style.pointerEvents = "none";
+      if (i === correct) opts[i].classList.add("correct");
+      if (i === selected && selected !== correct) opts[i].classList.add("wrong");
+    }
+    var resultEl = document.getElementById("quiz-result");
+    if (selected === correct) {
+      resultEl.textContent = "";
+      collectChest(_activeChestIdx);
+      document.getElementById("chest-quiz").style.display = "none";
+      document.getElementById("chest-earn-btn").style.display = "none";
+      var remaining = _totalChests - _chestsCollected;
+      var successDiv = document.getElementById("chest-success");
+      var remDiv = document.getElementById("chest-remaining");
+      successDiv.style.display = "";
+      if (remaining > 0) {
+        remDiv.textContent = remaining + " chest" + (remaining === 1 ? "" : "s") + " remaining — keep exploring!";
+      } else {
+        remDiv.textContent = "All chests collected — you win!";
+        remDiv.style.color = "#ffd700";
+      }
+    } else {
+      resultEl.textContent = "Wrong — try a different question!";
+      resultEl.style.color = "#ff8888";
+      setTimeout(function () {
+        document.getElementById("chest-earn-btn").style.display = "";
+        document.getElementById("chest-earn-btn").textContent = "Try Again";
+        document.getElementById("chest-quiz").style.display = "none";
+        _chestQuizActive = false;
+      }, 1500);
+    }
+  }
+
+  function collectChest(idx) {
+    var ch = _chests[idx];
+    ch.collected = true;
+    _chestsCollected++;
+    killScore += 100;
+
+    // Visual: make chest golden and remove glow ring
+    ch.group.traverse(function (c) {
+      if (c.isMesh && c.material) {
+        c.material = new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.3, metalness: 0.7, emissive: new THREE.Color(0x886600), emissiveIntensity: 0.4 });
+      }
+    });
+
+    // Update UI
+    var numEl = document.getElementById("kill-num");
+    var ptsEl = document.getElementById("kill-pts");
+    if (ptsEl) ptsEl.textContent = killScore + " pts";
+    updateQuestTracker();
+
+    // Check alternate win
+    if (_chestsCollected >= _totalChests) {
+      setTimeout(function () {
+        closeChestOverlay();
+        triggerWin();
+      }, 1200);
+    }
+  }
+
+  function updateQuestTracker() {
+    var textEl = document.getElementById("quest-tracker-text");
+    var barEl = document.getElementById("quest-tracker-bar-inner");
+    if (textEl) textEl.textContent = _chestsCollected + " / " + _totalChests + " Tools Mastered";
+    if (barEl) barEl.style.width = ((_chestsCollected / _totalChests) * 100) + "%";
+  }
+
+  function closeChestOverlay() {
+    document.getElementById("chest-overlay").classList.remove("visible");
+    _activeChestIdx = -1;
+    _chestQuizActive = false;
+  }
 
   var _treeIMs = {};
   function addTrees() {
@@ -3469,6 +4016,7 @@ var MedievalKingdom = (function () {
     }
 
     animateTraffic(t, dt);
+    animateChestLabels();
     updateBannerFade(dt);
 
     // Animate cached objects (no scene.traverse needed)
@@ -3679,7 +4227,7 @@ var sfx_sohot = new Audio("data:audio/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAWlzb21tcDQ
     if (scroll) {
       scroll.style.animation = "none";
       scroll.offsetHeight;
-      scroll.style.animation = "storyScroll 45s linear forwards";
+      scroll.style.animation = "storyScroll 35s linear forwards";
     }
     if (ws) ws.classList.add("visible");
   }
@@ -4191,8 +4739,35 @@ var sfx_sohot = new Audio("data:audio/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAWlzb21tcDQ
     if (e.target.tagName === "INPUT") return;
     var k = e.key === " " ? " " : e.key.toLowerCase();
     exploreKeys[k] = true;
-    if (e.key === "Escape") exitExploreMode();
+    if (e.key === "Escape") {
+      if (document.getElementById("chest-overlay").classList.contains("visible")) {
+        closeChestOverlay();
+      } else {
+        exitExploreMode();
+      }
+      return;
+    }
     if (e.key === " ") e.preventDefault();
+    if (k === "e" && _nearChestIdx >= 0) {
+      openChest(_nearChestIdx);
+    }
+    if (e.key === "+" || e.key === "=") {
+      for (var i = 0; i < traffic.length; i++) {
+        var v = traffic[i];
+        if (v.type === "ogre" && !v.dead) {
+          v.dead = true;
+          v.mesh.visible = false;
+          spawnSmokePoof(v.mesh.position.x, 1.0, v.mesh.position.z);
+          ogreKills++;
+          killScore += 50;
+        }
+      }
+      var numEl = document.getElementById("kill-num");
+      var ptsEl = document.getElementById("kill-pts");
+      if (numEl) numEl.textContent = ogreKills + " / " + totalOgres;
+      if (ptsEl) ptsEl.textContent = killScore + " pts";
+      if (ogreKills >= totalOgres) setTimeout(function () { triggerWin(); }, 400);
+    }
   }
   function onExploreKeyUp(e) {
     if (e.target.tagName === "INPUT") return;
@@ -4331,6 +4906,27 @@ var sfx_sohot = new Audio("data:audio/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAWlzb21tcDQ
     var walkBob = isMoving ? Math.abs(Math.sin(walkT * 2)) * 0.03 : 0;
     playerMesh.position.y = playerJumpY + walkBob;
 
+    // Chest proximity — show prompt when near
+    _nearChestIdx = -1;
+    for (var ci = 0; ci < _chests.length; ci++) {
+      var ch = _chests[ci];
+      if (ch.collected) continue;
+      var cdx = playerMesh.position.x - ch.x;
+      var cdz = playerMesh.position.z - ch.z;
+      if (Math.sqrt(cdx * cdx + cdz * cdz) < 2.0) {
+        _nearChestIdx = ci;
+        break;
+      }
+    }
+    var promptEl = document.getElementById("chest-prompt");
+    if (promptEl) {
+      if (_nearChestIdx >= 0 && exploreActive && !playerDead) {
+        promptEl.classList.remove("hidden");
+      } else {
+        promptEl.classList.add("hidden");
+      }
+    }
+
     // Catapult launch trigger — proximity to catapult at (-55, -8)
     if (!playerLaunched) {
       var catDx = playerMesh.position.x - (-55);
@@ -4360,7 +4956,7 @@ var sfx_sohot = new Audio("data:audio/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAWlzb21tcDQ
     }
 
     // Fire damage — check campfire proximity
-    var _cfSpots = [[-41, 3], [-15, -3], [-41, -5], [-15, 6]];
+    var _cfSpots = [[-41, 3], [-15, -3]];
     var inFire = false;
     for (var fi = 0; fi < _cfSpots.length; fi++) {
       var fd = Math.sqrt(Math.pow(playerMesh.position.x - _cfSpots[fi][0], 2) + Math.pow(playerMesh.position.z - _cfSpots[fi][1], 2));
@@ -4508,18 +5104,66 @@ var sfx_sohot = new Audio("data:audio/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAWlzb21tcDQ
         _treeIMs.trunk.instanceMatrix.needsUpdate = true;
         _treeIMs.foliage.instanceMatrix.needsUpdate = true;
       }
+      // Reset chests
+      _chestsCollected = 0;
+      _usedQuestions = {};
+      var chestWood = new THREE.MeshStandardMaterial({ color: 0x8a5a2a, roughness: 0.7, emissive: new THREE.Color(0x3a2510), emissiveIntensity: 0.3 });
+      for (var i = 0; i < _chests.length; i++) {
+        _chests[i].collected = false;
+        _chests[i].group.traverse(function (c) {
+          if (c.isMesh) c.material = chestWood;
+        });
+      }
+      updateQuestTracker();
     },
     setBgMusicMuted: function (m) { bgMusic.muted = m; },
     toggleSfxMute: function () { sfxMuted = !sfxMuted; },
     isSfxMuted: function () { return sfxMuted; },
     submitScore: function (name) { return addToLeaderboard(name, killScore); },
     getLeaderboardHtml: function (idx) { return renderLeaderboard(idx); },
+    setInfoContent: function (ic) { districtInfoContent = ic; },
+    openChest: openChest,
+    startChestQuiz: startChestQuiz,
+    closeChestOverlay: closeChestOverlay,
+    getChestsCollected: function () { return _chestsCollected; },
+    getTotalChests: function () { return _totalChests; },
+    updateQuestTracker: updateQuestTracker,
+    getChestToolMap: function () { return chestToolMap; },
+    getQuizQuestion: function (toolId) {
+      var questions = chestQuizData[toolId];
+      if (!questions) return null;
+      if (!_usedQuestions[toolId]) _usedQuestions[toolId] = [];
+      var available = [];
+      for (var qi = 0; qi < questions.length; qi++) {
+        if (_usedQuestions[toolId].indexOf(qi) === -1) available.push(qi);
+      }
+      if (available.length === 0) { _usedQuestions[toolId] = []; for (var qi = 0; qi < questions.length; qi++) available.push(qi); }
+      var pick = available[Math.floor(Math.random() * available.length)];
+      _usedQuestions[toolId].push(pick);
+      return questions[pick];
+    },
+    isToolCollected: function (toolId) {
+      for (var i = 0; i < _chests.length; i++) {
+        if (_chests[i].toolId === toolId && _chests[i].collected) return true;
+      }
+      return false;
+    },
+    collectChestByToolId: function (toolId) {
+      for (var i = 0; i < _chests.length; i++) {
+        if (_chests[i].toolId === toolId && !_chests[i].collected) {
+          collectChest(i);
+          return true;
+        }
+      }
+      return false;
+    },
   };
 })();
 
 // ─── UI Logic ───
 
 (function () {
+  function escHtml(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
   var districtHeadings = {
     village:  { icon: "⚒️", title: "The Village — Create" },
     township: { icon: "🏰", title: "The Township — Test" },
@@ -4606,6 +5250,7 @@ var sfx_sohot = new Audio("data:audio/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAWlzb21tcDQ
     function (districtId) { activateDistrict(districtId); },
     function (guildId) { activateGuild(guildId); }
   );
+  MedievalKingdom.setInfoContent(districtInfoContent);
 
   // Landing page clicks
   document.querySelectorAll(".realmOption").forEach(function (el) {
@@ -4640,6 +5285,9 @@ var sfx_sohot = new Audio("data:audio/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAWlzb21tcDQ
     document.getElementById("landing-bottom-bar").style.pointerEvents = "none";
     document.getElementById("explore-hud").classList.remove("hidden");
     document.getElementById("kill-counter").classList.remove("hidden");
+    document.getElementById("quest-tracker").classList.remove("hidden");
+    document.getElementById("quest-tracker").classList.add("explore-mode");
+    MedievalKingdom.updateQuestTracker();
     document.getElementById("health-bar-wrap").classList.remove("hidden");
     document.getElementById("health-bar-inner").style.width = "100%";
     document.getElementById("kill-num").textContent = "0 / 6";
@@ -4650,6 +5298,9 @@ var sfx_sohot = new Audio("data:audio/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAWlzb21tcDQ
   function exitExploreFromUI() {
     document.getElementById("explore-hud").classList.add("hidden");
     document.getElementById("kill-counter").classList.add("hidden");
+    document.getElementById("quest-tracker").classList.remove("explore-mode");
+    document.getElementById("chest-prompt").classList.add("hidden");
+    document.getElementById("chest-overlay").classList.remove("visible");
     document.getElementById("health-bar-wrap").classList.add("hidden");
     document.getElementById("death-screen").classList.remove("visible");
     document.getElementById("win-screen").classList.remove("visible");
@@ -4659,6 +5310,8 @@ var sfx_sohot = new Audio("data:audio/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAWlzb21tcDQ
     document.getElementById("landing-bottom-bar").style.pointerEvents = "";
     document.getElementById("landingPage").classList.remove("hidden");
     document.getElementById("realm-header").classList.remove("hidden");
+    document.getElementById("quest-tracker").classList.remove("hidden");
+    MedievalKingdom.updateQuestTracker();
     resetStoryScroll();
   }
 
@@ -4736,6 +5389,78 @@ var sfx_sohot = new Audio("data:audio/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAWlzb21tcDQ
     if (e.key === "Escape" && document.getElementById("highscore-overlay").classList.contains("visible")) {
       closeHighScores();
     }
+    if (e.key === "Escape" && document.getElementById("chest-overlay").classList.contains("visible")) {
+      MedievalKingdom.closeChestOverlay();
+    }
+  });
+
+  // Chest overlay handlers
+  document.getElementById("chest-close-x").addEventListener("click", function () {
+    MedievalKingdom.closeChestOverlay();
+  });
+  document.getElementById("chest-earn-btn").addEventListener("click", function () {
+    MedievalKingdom.startChestQuiz();
+  });
+
+  // Info overlay quiz — one question, correct = unlock chest
+  function showInfoQuiz() {
+    if (!_currentInfoToolId) return;
+    var q = MedievalKingdom.getQuizQuestion(_currentInfoToolId);
+    if (!q) return;
+    document.getElementById("info-quiz-btn").style.display = "none";
+    var quizDiv = document.getElementById("info-quiz");
+    quizDiv.style.display = "";
+    document.getElementById("info-quiz-question").textContent = q.q;
+    document.getElementById("info-quiz-result").textContent = "";
+    var optsDiv = document.getElementById("info-quiz-options");
+    optsDiv.innerHTML = "";
+    for (var oi = 0; oi < q.opts.length; oi++) {
+      var btn = document.createElement("button");
+      btn.className = "quiz-opt";
+      btn.textContent = q.opts[oi];
+      btn.setAttribute("data-idx", oi);
+      btn.addEventListener("click", function () {
+        var selected = parseInt(this.getAttribute("data-idx"));
+        var opts = document.querySelectorAll("#info-quiz-options .quiz-opt");
+        for (var i = 0; i < opts.length; i++) {
+          opts[i].style.pointerEvents = "none";
+          if (i === q.ans) opts[i].classList.add("correct");
+          if (i === selected && selected !== q.ans) opts[i].classList.add("wrong");
+        }
+        var resultEl = document.getElementById("info-quiz-result");
+        if (selected === q.ans) {
+          resultEl.textContent = "";
+          MedievalKingdom.collectChestByToolId(_currentInfoToolId);
+          quizDiv.style.display = "none";
+          var remaining = MedievalKingdom.getTotalChests() - MedievalKingdom.getChestsCollected();
+          var successDiv = document.getElementById("info-success");
+          var remDiv = document.getElementById("info-remaining");
+          successDiv.style.display = "";
+          if (remaining > 0) {
+            remDiv.textContent = remaining + " chest" + (remaining === 1 ? "" : "s") + " remaining — keep exploring!";
+          } else {
+            remDiv.textContent = "All chests collected — you win!";
+            remDiv.style.color = "#ffd700";
+          }
+          if (currentDistrictId) buildDistrictMenu(currentDistrictId);
+        } else {
+          resultEl.textContent = "Incorrect — try a different question!";
+          resultEl.style.color = "#ff8888";
+          setTimeout(function () {
+            showInfoQuiz();
+          }, 1500);
+        }
+      });
+      optsDiv.appendChild(btn);
+    }
+  }
+  document.getElementById("info-quiz-btn").addEventListener("click", showInfoQuiz);
+  document.getElementById("info-continue-btn").addEventListener("click", function () {
+    hideInfoOverlay();
+    MedievalKingdom.updateQuestTracker();
+  });
+  document.getElementById("chest-continue-btn").addEventListener("click", function () {
+    MedievalKingdom.closeChestOverlay();
   });
 
   document.getElementById("go-fullscreen").addEventListener("click", function () {
@@ -4803,10 +5528,19 @@ var sfx_sohot = new Audio("data:audio/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAWlzb21tcDQ
     var menu = document.getElementById("main-menu");
     menu.innerHTML = "";
     var items = districtMenuItems[districtId] || [];
+    var chestMap = MedievalKingdom.getChestToolMap ? MedievalKingdom.getChestToolMap() : [];
     items.forEach(function (item) {
+      // Find matching tool ID for this menu item
+      var toolId = null;
+      for (var ci = 0; ci < chestMap.length; ci++) {
+        if (chestMap[ci].key === item.label) { toolId = chestMap[ci].id; break; }
+      }
+      var collected = toolId && MedievalKingdom.isToolCollected(toolId);
+
       var btn = document.createElement("div");
       btn.className = "menu-item-text";
-      btn.textContent = item.label;
+      if (collected) btn.classList.add("collected");
+      btn.innerHTML = (collected ? "<span class='menu-check'>✓</span> " : "") + escHtml(item.label);
       btn.addEventListener("click", function () {
         var wasOn = this.classList.contains("on");
         menu.querySelectorAll(".menu-item-text").forEach(function (el) { el.classList.remove("on"); });
@@ -4821,6 +5555,8 @@ var sfx_sohot = new Audio("data:audio/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAWlzb21tcDQ
     });
   }
 
+  var _currentInfoToolId = null;
+
   function showDistrictInfo(districtId, label) {
     var content = (districtInfoContent[districtId] || {})[label];
     if (!content) return;
@@ -4828,11 +5564,45 @@ var sfx_sohot = new Audio("data:audio/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAWlzb21tcDQ
     document.getElementById("info-text").textContent = content.text;
     document.getElementById("info-overlay").classList.add("visible");
     document.getElementById("overlay-close-btn").classList.add("visible");
+
+    // Find matching tool ID for quiz
+    _currentInfoToolId = null;
+    var chestMap = MedievalKingdom.getChestToolMap ? MedievalKingdom.getChestToolMap() : [];
+    for (var i = 0; i < chestMap.length; i++) {
+      if (chestMap[i].key === label) { _currentInfoToolId = chestMap[i].id; break; }
+    }
+    var quizBtn = document.getElementById("info-quiz-btn");
+    var quizDiv = document.getElementById("info-quiz");
+    var alreadyCollected = _currentInfoToolId && MedievalKingdom.isToolCollected(_currentInfoToolId);
+    if (quizBtn) {
+      if (_currentInfoToolId && !alreadyCollected) {
+        quizBtn.style.display = "";
+        quizBtn.textContent = "Take Quiz";
+      } else if (alreadyCollected) {
+        quizBtn.style.display = "";
+        quizBtn.textContent = "✓ Chest Unlocked";
+        quizBtn.style.pointerEvents = "none";
+        quizBtn.style.opacity = "0.5";
+      } else {
+        quizBtn.style.display = "none";
+      }
+    }
+    if (quizDiv) quizDiv.style.display = "none";
+    document.getElementById("info-success").style.display = "none";
+    var resultEl = document.getElementById("info-quiz-result");
+    if (resultEl) resultEl.textContent = "";
   }
 
   function hideInfoOverlay() {
     document.getElementById("info-overlay").classList.remove("visible");
     document.getElementById("overlay-close-btn").classList.remove("visible");
+    var quizBtn = document.getElementById("info-quiz-btn");
+    quizBtn.style.display = "none";
+    quizBtn.style.pointerEvents = "";
+    quizBtn.style.opacity = "";
+    document.getElementById("info-quiz").style.display = "none";
+    document.getElementById("info-success").style.display = "none";
+    _currentInfoToolId = null;
     document.querySelectorAll(".menu-item-text").forEach(function (el) { el.classList.remove("on"); });
     document.querySelectorAll(".guild-menu-btn").forEach(function (el) { el.classList.remove("on"); });
   }
