@@ -158,7 +158,7 @@ html, body {
     transition: opacity 0.4s ease;
 }
 
-#guilds-btn {
+#guilds-btn, #explore-btn {
     padding: 8px 22px;
     background: rgba(30, 20, 10, 0.75);
     border: 1px solid rgba(255, 200, 80, 0.25);
@@ -174,6 +174,96 @@ html, body {
     white-space: nowrap;
     text-transform: uppercase;
     font-family: 'Cinzel', serif;
+}
+#explore-btn:hover { background: rgba(60, 30, 10, 0.85); border-color: rgba(255, 140, 40, 0.5); }
+
+#explore-hud {
+    position: absolute;
+    top: 2vh;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    transition: opacity 0.4s ease;
+}
+#explore-hud.hidden { opacity: 0; pointer-events: none; }
+#explore-hud-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 28px;
+    background: rgba(20, 12, 5, 0.85);
+    border: 1px solid rgba(255, 170, 50, 0.3);
+    border-radius: 6px;
+    backdrop-filter: blur(10px);
+    font-family: 'Cinzel', serif;
+    color: #ffd700;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+.explore-keys {
+    font-family: 'MedievalSharp', cursive;
+    font-size: 11px;
+    color: rgba(255, 220, 150, 0.6);
+    letter-spacing: 1px;
+    font-weight: 400;
+}
+#kill-counter {
+    position: absolute;
+    top: 2vh;
+    right: 3vw;
+    z-index: 10;
+    padding: 10px 22px;
+    background: rgba(20, 12, 5, 0.85);
+    border: 1px solid rgba(255, 60, 30, 0.4);
+    border-radius: 6px;
+    backdrop-filter: blur(10px);
+    font-family: 'Cinzel', serif;
+    color: #ff4444;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 0 0 8px rgba(255, 50, 20, 0.5);
+    transition: opacity 0.4s ease, transform 0.15s ease;
+}
+#kill-counter.hidden { opacity: 0; pointer-events: none; }
+#kill-counter .kill-label {
+    font-size: 10px;
+    color: rgba(255, 180, 120, 0.6);
+    letter-spacing: 3px;
+    display: block;
+    margin-bottom: 2px;
+}
+#kill-counter .kill-num {
+    font-size: 28px;
+    color: #ffd700;
+    text-shadow: 0 0 12px rgba(255, 200, 50, 0.5);
+}
+#kill-counter .kill-pts {
+    font-size: 11px;
+    color: rgba(255, 220, 150, 0.5);
+    display: block;
+    margin-top: 2px;
+    letter-spacing: 1px;
+}
+#kill-counter.bump { transform: scale(1.15); }
+#kill-flash {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 11;
+    font-family: 'Cinzel', serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: #ffd700;
+    text-shadow: 0 0 20px rgba(255, 100, 20, 0.8), 0 2px 4px rgba(0,0,0,0.6);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.4s ease;
 }
 
 #guilds-btn:hover {
@@ -616,7 +706,20 @@ html, body {
                 <div id="fortress" class="realmOption"><span class="realm-emoji">⚔️</span><span class="realm-label">Fortress — Deploy</span></div>
                 <div id="go-fullscreen"></div>
             </div>
+            <div id="explore-hud" class="hidden">
+                <div id="explore-hud-inner">
+                    <span>⚔️ EXPLORE MODE</span>
+                    <span class="explore-keys">WASD to move · Mouse to look · Click to swing · ESC to exit</span>
+                </div>
+            </div>
+            <div id="kill-counter" class="hidden">
+                <span class="kill-label">Vanquished</span>
+                <span class="kill-num" id="kill-num">0</span>
+                <span class="kill-pts" id="kill-pts">0 pts</span>
+            </div>
+            <div id="kill-flash"></div>
             <div id="landing-bottom-bar">
+                <div id="explore-btn">🗡️ Explore</div>
                 <div id="guilds-btn">Guilds</div>
                 <div id="compass-btn" title="Reset view">
                     <svg viewBox="0 0 48 48" width="48" height="48">
@@ -672,6 +775,7 @@ var MedievalKingdom = (function () {
   var _catMeshes = [];
   var _bbMeshes = [];
   var _districtMeshes = [];
+  var _campfirePeasants = [];
 
   var OVERVIEW = {
     pos: new THREE.Vector3(0, 55, 65),
@@ -935,6 +1039,7 @@ var MedievalKingdom = (function () {
           pg.add(stLegR);
         }
         fg.add(pg);
+        _campfirePeasants.push({ group: pg, parent: fg, wx: fx + px, wz: fz + pz });
       }
 
       fg.position.set(fx, 0, fz);
@@ -2785,7 +2890,7 @@ var MedievalKingdom = (function () {
   var _dragMoved = false;
 
   function onPointerDown(e) {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || exploreActive) return;
     orbit.dragging = true;
     orbit.returning = false;
     orbit.startX = e.clientX;
@@ -2797,7 +2902,7 @@ var MedievalKingdom = (function () {
   function onPointerUp() { orbit.dragging = false; }
 
   function onPointerMoveDrag(e) {
-    if (!orbit.dragging || !orbit.enabled) return;
+    if (!orbit.dragging || !orbit.enabled || exploreActive) return;
     var dx = e.clientX - orbit.startX, dy = e.clientY - orbit.startY;
     if (Math.abs(dx) > 2 || Math.abs(dy) > 2) _dragMoved = true;
     orbit.theta -= dx * 0.006;
@@ -2824,7 +2929,7 @@ var MedievalKingdom = (function () {
 
   function onWheel(e) {
     e.preventDefault();
-    if (!orbit.enabled) return;
+    if (!orbit.enabled || exploreActive) return;
     orbit.returning = false;
     orbit.radius = Math.max(orbit.MIN_RADIUS, Math.min(orbit.MAX_RADIUS, orbit.radius + e.deltaY * 0.08));
     orbit.userControlling = true;
@@ -2994,8 +3099,13 @@ var MedievalKingdom = (function () {
     var dt = Math.min(clock.getDelta(), 0.05);
     var t = clock.getElapsedTime();
 
+    // Explore mode camera
+    if (exploreActive) {
+      updateExplore(dt, t);
+    }
+
     // Camera logic (same as original)
-    if (orbit.userControlling) {
+    else if (orbit.userControlling) {
       orbit.idleTimer += dt;
       camera.position.copy(orbitToPosition());
       camera.lookAt(orbit.target);
@@ -3118,6 +3228,602 @@ var MedievalKingdom = (function () {
     renderer.setSize(container.clientWidth, container.clientHeight);
   }
 
+  // ─── Explore Mode — Third Person ───
+
+  var exploreActive = false;
+  var playerMesh = null;
+  var playerYaw = 0;
+  var exploreCamTheta = 0;
+  var exploreCamPhi = 0.5;
+  var exploreCamDist = 5;
+  var exploreKeys = {};
+  var exploreDragging = false;
+  var exploreLastMX = 0, exploreLastMY = 0;
+  var swordSwingTimer = 0;
+  var swordSwinging = false;
+  var swordHitThisSwing = false;
+  var smokePoofs = [];
+  var killCount = 0;
+  var killScore = 0;
+
+  function spawnSmokePoof(x, y, z) {
+    var count = 25;
+    var geo = new THREE.BufferGeometry();
+    var pos = new Float32Array(count * 3);
+    for (var i = 0; i < count; i++) {
+      pos[i * 3] = x + (Math.random() - 0.5) * 0.6;
+      pos[i * 3 + 1] = y + Math.random() * 0.3;
+      pos[i * 3 + 2] = z + (Math.random() - 0.5) * 0.6;
+    }
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    var mat = new THREE.PointsMaterial({
+      color: 0xccccaa, size: 0.7, transparent: true, opacity: 1.0,
+      depthWrite: false, fog: false,
+    });
+    var pts = new THREE.Points(geo, mat);
+    scene.add(pts);
+    var vels = [];
+    for (var i = 0; i < count; i++) {
+      vels.push({
+        vx: (Math.random() - 0.5) * 3,
+        vy: 1.5 + Math.random() * 3,
+        vz: (Math.random() - 0.5) * 3,
+      });
+    }
+    smokePoofs.push({ pts: pts, vels: vels, life: 1.8 });
+  }
+
+  function updateSmokePoofs(dt) {
+    for (var i = smokePoofs.length - 1; i >= 0; i--) {
+      var pf = smokePoofs[i];
+      pf.life -= dt;
+      if (pf.life <= 0) {
+        scene.remove(pf.pts);
+        pf.pts.geometry.dispose();
+        pf.pts.material.dispose();
+        smokePoofs.splice(i, 1);
+        continue;
+      }
+      pf.pts.material.opacity = Math.min(1.0, pf.life / 0.6);
+      var arr = pf.pts.geometry.attributes.position.array;
+      for (var j = 0; j < pf.vels.length; j++) {
+        arr[j * 3] += pf.vels[j].vx * dt;
+        arr[j * 3 + 1] += pf.vels[j].vy * dt;
+        arr[j * 3 + 2] += pf.vels[j].vz * dt;
+        pf.vels[j].vy -= 1.5 * dt;
+      }
+      pf.pts.geometry.attributes.position.needsUpdate = true;
+    }
+  }
+
+  function registerKill(type) {
+    killCount++;
+    var pts = type === "ogre" ? 50 : 10;
+    killScore += pts;
+
+    var numEl = document.getElementById("kill-num");
+    var ptsEl = document.getElementById("kill-pts");
+    var ctr = document.getElementById("kill-counter");
+    var flash = document.getElementById("kill-flash");
+    if (numEl) numEl.textContent = killCount;
+    if (ptsEl) ptsEl.textContent = killScore + " pts";
+
+    if (ctr) { ctr.classList.add("bump"); setTimeout(function () { ctr.classList.remove("bump"); }, 150); }
+    if (flash) {
+      flash.textContent = "+" + pts + (type === "ogre" ? "  ⚔️" : "  💀");
+      flash.style.opacity = "1";
+      flash.style.transform = "translate(-50%, -50%) scale(1.2)";
+      setTimeout(function () {
+        flash.style.opacity = "0";
+        flash.style.transform = "translate(-50%, -70%) scale(0.8)";
+      }, 600);
+    }
+  }
+
+  function checkSwordHits() {
+    if (!playerMesh) return;
+    var px = playerMesh.position.x;
+    var pz = playerMesh.position.z;
+    var fwdX = Math.sin(playerMesh.rotation.y);
+    var fwdZ = Math.cos(playerMesh.rotation.y);
+    var hitRange = 2.0;
+
+    for (var i = traffic.length - 1; i >= 0; i--) {
+      var v = traffic[i];
+      if (v.type !== "ogre" && v.type !== "peasant") continue;
+      var mx = v.mesh.position.x;
+      var mz = v.mesh.position.z;
+      var dx = mx - px;
+      var dz = mz - pz;
+      var dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist > hitRange) continue;
+      var dot = dx * fwdX + dz * fwdZ;
+      if (dot < 0) continue;
+
+      var h = v.type === "ogre" ? 2.0 : 0.6;
+      spawnSmokePoof(mx, h * 0.5, mz);
+      scene.remove(v.mesh);
+      registerKill(v.type);
+      traffic.splice(i, 1);
+      swordHitThisSwing = true;
+    }
+
+    for (var i = _campfirePeasants.length - 1; i >= 0; i--) {
+      var cp = _campfirePeasants[i];
+      var dx = cp.wx - px;
+      var dz = cp.wz - pz;
+      var dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist > hitRange) continue;
+      var dot = dx * fwdX + dz * fwdZ;
+      if (dot < 0) continue;
+
+      spawnSmokePoof(cp.wx, 0.3, cp.wz);
+      cp.parent.remove(cp.group);
+      registerKill("peasant");
+      _campfirePeasants.splice(i, 1);
+      swordHitThisSwing = true;
+    }
+  }
+
+  function createPlayerCharacter() {
+    var g = new THREE.Group();
+    var skinMat = new THREE.MeshStandardMaterial({
+      color: 0xd4a574, roughness: 0.7,
+      emissive: new THREE.Color(0xd4a574).multiplyScalar(0.2), emissiveIntensity: 1,
+    });
+    var armorMat = new THREE.MeshStandardMaterial({
+      color: 0x7a8a7a, metalness: 0.5, roughness: 0.4,
+      emissive: new THREE.Color(0x3a4a3a), emissiveIntensity: 0.3,
+    });
+    var chainMat = new THREE.MeshStandardMaterial({
+      color: 0x8a8a8a, metalness: 0.4, roughness: 0.5,
+      emissive: new THREE.Color(0x3a3a3a), emissiveIntensity: 0.2,
+    });
+    var greenMat = new THREE.MeshStandardMaterial({
+      color: 0x2a7a2a, roughness: 0.75,
+      emissive: new THREE.Color(0x1a4a1a), emissiveIntensity: 0.4,
+    });
+    var bootMat = new THREE.MeshStandardMaterial({
+      color: 0x5a3a1a, roughness: 0.85,
+      emissive: new THREE.Color(0x2a1a08), emissiveIntensity: 0.2,
+    });
+    var beltMat = new THREE.MeshStandardMaterial({
+      color: 0x6a4a20, roughness: 0.8,
+      emissive: new THREE.Color(0x3a2a10), emissiveIntensity: 0.2,
+    });
+
+    // === BODY — chainmail under green tunic ===
+    // Chainmail undershirt
+    var chainBody = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.42, 0.2), chainMat);
+    chainBody.position.y = 0.5;
+    g.add(chainBody);
+    // Green tunic over chainmail
+    var tunic = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.3, 0.22), greenMat);
+    tunic.position.y = 0.48;
+    g.add(tunic);
+    // Chest armor plate
+    var chestPlate = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.2, 0.05), armorMat);
+    chestPlate.position.set(0, 0.55, 0.1);
+    g.add(chestPlate);
+    // Shoulder pauldrons
+    var pauldronGeo = new THREE.SphereGeometry(0.07, 5, 5);
+    var pauldronL = new THREE.Mesh(pauldronGeo, armorMat);
+    pauldronL.position.set(0.19, 0.68, 0);
+    pauldronL.scale.set(1.2, 0.7, 1.0);
+    g.add(pauldronL);
+    var pauldronR = pauldronL.clone();
+    pauldronR.position.x = -0.19;
+    g.add(pauldronR);
+
+    // Belt with buckle
+    var belt = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.06, 0.24), beltMat);
+    belt.position.y = 0.35;
+    g.add(belt);
+    var buckle = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.05, 0.03),
+      new THREE.MeshStandardMaterial({ color: 0xddaa33, metalness: 0.6, roughness: 0.3 }));
+    buckle.position.set(0, 0.35, 0.13);
+    g.add(buckle);
+
+    // === HEAD — with helmet ===
+    var head = new THREE.Mesh(new THREE.SphereGeometry(0.12, 6, 6), skinMat);
+    head.position.y = 0.82;
+    g.add(head);
+    // Helmet — conical iron helm
+    var helmetMat = new THREE.MeshStandardMaterial({
+      color: 0x7a7a7a, metalness: 0.6, roughness: 0.35,
+      emissive: new THREE.Color(0x3a3a3a), emissiveIntensity: 0.25,
+    });
+    var helmetBase = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.14, 0.12, 8), helmetMat);
+    helmetBase.position.y = 0.88;
+    g.add(helmetBase);
+    var helmetTop = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.12, 6), helmetMat);
+    helmetTop.position.y = 0.97;
+    g.add(helmetTop);
+    // Nose guard
+    var noseGuard = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.08, 0.04), helmetMat);
+    noseGuard.position.set(0, 0.84, 0.13);
+    g.add(noseGuard);
+
+    // === SHIELD ON BACK — Hylian-style ===
+    var shieldGroup = new THREE.Group();
+    shieldGroup.position.set(0, 0.55, -0.14);
+    shieldGroup.rotation.x = 0.1;
+
+    // Main shield body — pointed bottom like Hylian shield
+    var shieldMainMat = new THREE.MeshStandardMaterial({
+      color: 0x1a3a8a, metalness: 0.3, roughness: 0.5,
+      emissive: new THREE.Color(0x0a1a4a), emissiveIntensity: 0.3,
+    });
+    // Top half — rounded rectangle
+    var shieldTop = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.18, 0.03), shieldMainMat);
+    shieldTop.position.y = 0.06;
+    shieldGroup.add(shieldTop);
+    // Bottom half — tapers to point (use a wedge shape)
+    var shieldBotGeo = new THREE.CylinderGeometry(0, 0.12, 0.14, 3);
+    var shieldBot = new THREE.Mesh(shieldBotGeo, shieldMainMat);
+    shieldBot.position.y = -0.1;
+    shieldBot.rotation.y = Math.PI;
+    shieldGroup.add(shieldBot);
+    // Red Triforce-inspired emblem (triangle)
+    var emblemMat = new THREE.MeshStandardMaterial({
+      color: 0xddaa22, metalness: 0.5, roughness: 0.3,
+      emissive: new THREE.Color(0xaa8800), emissiveIntensity: 0.4,
+    });
+    // Golden triangle (Triforce nod)
+    var triGeo = new THREE.ConeGeometry(0.05, 0.08, 3);
+    var tri1 = new THREE.Mesh(triGeo, emblemMat);
+    tri1.position.set(0, 0.1, 0.018);
+    tri1.rotation.x = 0;
+    shieldGroup.add(tri1);
+    var tri2 = new THREE.Mesh(triGeo, emblemMat);
+    tri2.position.set(-0.04, 0.03, 0.018);
+    shieldGroup.add(tri2);
+    var tri3 = new THREE.Mesh(triGeo, emblemMat);
+    tri3.position.set(0.04, 0.03, 0.018);
+    shieldGroup.add(tri3);
+    // Red bird / crest (simplified as a diamond shape)
+    var crestMat = new THREE.MeshStandardMaterial({
+      color: 0xcc2222, metalness: 0.2, roughness: 0.5,
+      emissive: new THREE.Color(0x881111), emissiveIntensity: 0.3,
+    });
+    var crest = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.04, 0.02), crestMat);
+    crest.position.set(0, 0.06, 0.02);
+    shieldGroup.add(crest);
+    // Metal rim around shield edge
+    var rimMat = new THREE.MeshStandardMaterial({
+      color: 0x888888, metalness: 0.6, roughness: 0.3,
+      emissive: new THREE.Color(0x444444), emissiveIntensity: 0.2,
+    });
+    var rimTop = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.02, 0.04), rimMat);
+    rimTop.position.y = 0.15;
+    shieldGroup.add(rimTop);
+    var rimL = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.2, 0.04), rimMat);
+    rimL.position.set(-0.12, 0.05, 0);
+    shieldGroup.add(rimL);
+    var rimR = rimL.clone();
+    rimR.position.x = 0.12;
+    shieldGroup.add(rimR);
+
+    g.add(shieldGroup);
+
+    // === ARMS ===
+    var armGeo = new THREE.BoxGeometry(0.07, 0.3, 0.07);
+    // Left arm (torch hand)
+    var armLPivot = new THREE.Group();
+    armLPivot.position.set(-0.18, 0.6, 0);
+    armLPivot.add(new THREE.Mesh(armGeo, chainMat));
+    var gauntletL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.06, 0.08), armorMat);
+    gauntletL.position.y = -0.16;
+    armLPivot.add(gauntletL);
+    g.add(armLPivot);
+
+    // Right arm (sword hand) — on the opposite side, pushed out more
+    var armRPivot = new THREE.Group();
+    armRPivot.position.set(0.22, 0.6, 0);
+    armRPivot.add(new THREE.Mesh(armGeo, chainMat));
+    var gauntletR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.07, 0.09), armorMat);
+    gauntletR.position.y = -0.17;
+    armRPivot.add(gauntletR);
+
+    // Sword — angled 45° outward from the arm so it's held naturally
+    var swordGroup = new THREE.Group();
+    swordGroup.position.set(0, -0.17, 0.07);
+    swordGroup.rotation.x = 0.7;
+
+    var swordGripMat = new THREE.MeshStandardMaterial({ color: 0x4a2a10, roughness: 0.75,
+      emissive: new THREE.Color(0x2a1a08), emissiveIntensity: 0.3 });
+    var crossGuardMat = new THREE.MeshStandardMaterial({ color: 0xddaa22, metalness: 0.65, roughness: 0.25,
+      emissive: new THREE.Color(0x8a6600), emissiveIntensity: 0.3 });
+    var bladeMat = new THREE.MeshStandardMaterial({
+      color: 0xddddef, metalness: 0.75, roughness: 0.1,
+      emissive: new THREE.Color(0x8888cc), emissiveIntensity: 0.25,
+    });
+
+    // Pommel (bottom)
+    var pommel = new THREE.Mesh(new THREE.SphereGeometry(0.025, 5, 5), crossGuardMat);
+    pommel.position.y = -0.06;
+    swordGroup.add(pommel);
+    // Grip (leather wrap)
+    var grip = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.02, 0.1, 6), swordGripMat);
+    grip.position.y = 0;
+    swordGroup.add(grip);
+    // Crossguard
+    var crossGuard = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.025, 0.025), crossGuardMat);
+    crossGuard.position.y = 0.055;
+    swordGroup.add(crossGuard);
+    // Crossguard tips (small spheres at ends)
+    var cgTipL = new THREE.Mesh(new THREE.SphereGeometry(0.015, 4, 4), crossGuardMat);
+    cgTipL.position.set(0.06, 0.055, 0);
+    swordGroup.add(cgTipL);
+    var cgTipR = cgTipL.clone();
+    cgTipR.position.x = -0.06;
+    swordGroup.add(cgTipR);
+    // Blade — tapers slightly toward the tip
+    var blade = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.4, 0.012), bladeMat);
+    blade.position.y = 0.27;
+    swordGroup.add(blade);
+    // Fuller (groove down center of blade — darker strip)
+    var fuller = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.3, 0.014),
+      new THREE.MeshStandardMaterial({ color: 0xaaaacc, metalness: 0.8, roughness: 0.2 }));
+    fuller.position.y = 0.22;
+    swordGroup.add(fuller);
+    // Blade tip
+    var bladeTip = new THREE.Mesh(new THREE.ConeGeometry(0.017, 0.07, 4), bladeMat);
+    bladeTip.position.y = 0.505;
+    swordGroup.add(bladeTip);
+
+    armRPivot.add(swordGroup);
+    g.add(armRPivot);
+
+    // === LEGS — armored boots ===
+    var legGeo = new THREE.BoxGeometry(0.08, 0.25, 0.08);
+    var legLPivot = new THREE.Group();
+    legLPivot.position.set(0.07, 0.3, 0);
+    var legL = new THREE.Mesh(legGeo, bootMat);
+    legLPivot.add(legL);
+    var shinL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.12, 0.05), armorMat);
+    shinL.position.set(0, -0.06, 0.03);
+    legLPivot.add(shinL);
+    g.add(legLPivot);
+    var legRPivot = new THREE.Group();
+    legRPivot.position.set(-0.07, 0.3, 0);
+    var legR = new THREE.Mesh(legGeo, bootMat);
+    legRPivot.add(legR);
+    var shinR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.12, 0.05), armorMat);
+    shinR.position.set(0, -0.06, 0.03);
+    legRPivot.add(shinR);
+    g.add(legRPivot);
+
+    // Torch in left hand — thicker pole, wrapped top, layered flames
+    var torchX = -0.24, torchZ = 0.08;
+    var torchPoleMat = new THREE.MeshStandardMaterial({ color: 0x5a3a1a, roughness: 0.85,
+      emissive: 0x2a1a08, emissiveIntensity: 0.3 });
+    var torchPole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.4, 5), torchPoleMat);
+    torchPole.position.set(torchX, 0.45, torchZ);
+    g.add(torchPole);
+    // Wrapped cloth at top
+    var torchWrap = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.035, 0.08, 5),
+      new THREE.MeshStandardMaterial({ color: 0x8a6a3a, roughness: 0.9, emissive: 0x4a3a1a, emissiveIntensity: 0.5 }));
+    torchWrap.position.set(torchX, 0.63, torchZ);
+    g.add(torchWrap);
+    // Outer flame — big warm cone
+    var flameOuter = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.18, 5),
+      new THREE.MeshBasicMaterial({ color: 0xff5500, transparent: true, opacity: 0.85 }));
+    flameOuter.position.set(torchX, 0.76, torchZ);
+    flameOuter.userData._isTorchFlame = true;
+    _animObjs.push(flameOuter);
+    g.add(flameOuter);
+    // Inner flame — bright yellow core
+    var flameInner = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.12, 4),
+      new THREE.MeshBasicMaterial({ color: 0xffcc22, transparent: true, opacity: 0.95 }));
+    flameInner.position.set(torchX, 0.74, torchZ);
+    flameInner.userData._isTorchFlame = true;
+    flameInner.userData._flameIdx = 99;
+    _animObjs.push(flameInner);
+    g.add(flameInner);
+
+    // Warm glow from the torch
+    var pLight = new THREE.PointLight(0xff8833, 1.5, 10, 2);
+    pLight.position.set(torchX, 0.85, torchZ);
+    g.add(pLight);
+
+    g.userData._playerArmL = armLPivot;
+    g.userData._playerArmR = armRPivot;
+    g.userData._playerLegL = legLPivot;
+    g.userData._playerLegR = legRPivot;
+
+    g.visible = false;
+    scene.add(g);
+    return g;
+  }
+
+  function enterExploreMode() {
+    if (exploreActive) return;
+    exploreActive = true;
+
+    if (!playerMesh) playerMesh = createPlayerCharacter();
+
+    playerMesh.position.set(-41, 0, 3);
+    playerMesh.visible = true;
+    playerYaw = 0;
+    exploreCamTheta = Math.PI;
+    exploreCamPhi = 0.45;
+    exploreCamDist = 4.5;
+    exploreKeys = {};
+    killCount = 0;
+    killScore = 0;
+
+    // Attach explore-specific key handlers
+    window.addEventListener("keydown", onExploreKeyDown);
+    window.addEventListener("keyup", onExploreKeyUp);
+    container.addEventListener("mousedown", onExploreMDown);
+    window.addEventListener("mouseup", onExploreMUp);
+    window.addEventListener("mousemove", onExploreMMove);
+  }
+
+  function exitExploreMode() {
+    if (!exploreActive) return;
+    exploreActive = false;
+    if (playerMesh) playerMesh.visible = false;
+    exploreKeys = {};
+
+    window.removeEventListener("keydown", onExploreKeyDown);
+    window.removeEventListener("keyup", onExploreKeyUp);
+    container.removeEventListener("mousedown", onExploreMDown);
+    window.removeEventListener("mouseup", onExploreMUp);
+    window.removeEventListener("mousemove", onExploreMMove);
+
+    orbit.userControlling = false;
+    orbit.returning = true;
+  }
+
+  function onExploreKeyDown(e) {
+    exploreKeys[e.key.toLowerCase()] = true;
+    if (e.key === "Escape") exitExploreMode();
+  }
+  function onExploreKeyUp(e) { exploreKeys[e.key.toLowerCase()] = false; }
+  var _exploreDragDist = 0;
+  function onExploreMDown(e) {
+    if (e.button === 2) {
+      exploreDragging = true;
+      exploreLastMX = e.clientX;
+      exploreLastMY = e.clientY;
+      _exploreDragDist = 0;
+      e.preventDefault();
+    } else if (e.button === 0) {
+      exploreDragging = true;
+      exploreLastMX = e.clientX;
+      exploreLastMY = e.clientY;
+      _exploreDragDist = 0;
+      e.preventDefault();
+    }
+  }
+  function onExploreMUp(e) {
+    if (exploreDragging && e.button === 0 && _exploreDragDist < 6) {
+      if (!swordSwinging) {
+        swordSwinging = true;
+        swordSwingTimer = 0;
+        swordHitThisSwing = false;
+      }
+    }
+    exploreDragging = false;
+  }
+  function onExploreMMove(e) {
+    if (!exploreDragging) return;
+    var dx = e.clientX - exploreLastMX;
+    var dy = e.clientY - exploreLastMY;
+    _exploreDragDist += Math.abs(dx) + Math.abs(dy);
+    exploreLastMX = e.clientX;
+    exploreLastMY = e.clientY;
+    exploreCamTheta -= dx * 0.005;
+    exploreCamPhi = Math.max(0.15, Math.min(1.2, exploreCamPhi - dy * 0.005));
+  }
+
+  function updateExplore(dt, t) {
+    if (!exploreActive || !playerMesh) return;
+
+    // Movement relative to camera facing direction
+    var moveSpeed = 6.0;
+    var moveX = 0, moveZ = 0;
+    if (exploreKeys["w"]) moveZ += 1;
+    if (exploreKeys["s"]) moveZ -= 1;
+    if (exploreKeys["a"]) moveX -= 1;
+    if (exploreKeys["d"]) moveX += 1;
+
+    var isMoving = (moveX !== 0 || moveZ !== 0);
+
+    if (isMoving) {
+      var camFwd = exploreCamTheta;
+      var mx = Math.sin(camFwd) * moveZ + Math.sin(camFwd - Math.PI / 2) * moveX;
+      var mz = Math.cos(camFwd) * moveZ + Math.cos(camFwd - Math.PI / 2) * moveX;
+      var len = Math.sqrt(mx * mx + mz * mz);
+      if (len > 0) { mx /= len; mz /= len; }
+
+      playerMesh.position.x += mx * moveSpeed * dt;
+      playerMesh.position.z += mz * moveSpeed * dt;
+
+      // Clamp to world bounds
+      playerMesh.position.x = Math.max(-68, Math.min(68, playerMesh.position.x));
+      playerMesh.position.z = Math.max(-40, Math.min(20, playerMesh.position.z));
+
+      // Face movement direction
+      playerYaw = Math.atan2(mx, mz);
+      playerMesh.rotation.y = playerYaw;
+    }
+
+    // Walking animation
+    var walkT = isMoving ? t * 6.0 : 0;
+    var walkSwing = isMoving ? 0.45 : 0;
+    playerMesh.userData._playerLegL.rotation.x = Math.sin(walkT) * walkSwing;
+    playerMesh.userData._playerLegR.rotation.x = Math.sin(walkT + Math.PI) * walkSwing;
+    playerMesh.userData._playerArmL.rotation.x = Math.sin(walkT + Math.PI) * walkSwing * 0.6;
+    if (isMoving) {
+      playerMesh.position.y = Math.abs(Math.sin(walkT * 2)) * 0.03;
+    } else {
+      playerMesh.position.y = 0;
+    }
+
+    // Sword slash animation — wind up behind, slash forward
+    var armR = playerMesh.userData._playerArmR;
+    if (swordSwinging) {
+      swordSwingTimer += dt;
+      var dur = 0.5;
+      var p = swordSwingTimer / dur;
+      if (p < 0.2) {
+        // Wind-up: arm goes UP and BEHIND character
+        var e1 = p / 0.2;
+        var ease1 = e1 * e1;
+        armR.rotation.x = 2.0 * ease1;
+        armR.rotation.z = -0.6 * ease1;
+        armR.rotation.y = 0.3 * ease1;
+      } else if (p < 0.45) {
+        // SLASH: arm swings DOWN and FORWARD, stops at horizontal
+        var e2 = (p - 0.2) / 0.25;
+        var ease2 = 1 - (1 - e2) * (1 - e2);
+        armR.rotation.x = 2.0 - 2.2 * ease2;
+        armR.rotation.z = -0.6 + 0.8 * ease2;
+        armR.rotation.y = 0.3 - 0.4 * ease2;
+      } else if (p < 1.0) {
+        // Recovery — ease from end-of-slash back to neutral
+        var e3 = (p - 0.45) / 0.55;
+        var ease3 = e3 * e3;
+        armR.rotation.x = -0.2 * (1 - ease3);
+        armR.rotation.z = 0.2 * (1 - ease3);
+        armR.rotation.y = -0.1 * (1 - ease3);
+      } else {
+        swordSwinging = false;
+        swordSwingTimer = 0;
+        armR.rotation.x = 0;
+        armR.rotation.z = 0;
+        armR.rotation.y = 0;
+      }
+
+      // Check for hits on ogres/peasants during the slash phase
+      if (p >= 0.2 && p < 0.5 && !swordHitThisSwing) {
+        checkSwordHits();
+      }
+    } else {
+      armR.rotation.x = Math.sin(walkT) * walkSwing * 0.6;
+      armR.rotation.z = 0;
+      armR.rotation.y = 0;
+    }
+
+    // Update smoke poofs from sword kills
+    updateSmokePoofs(dt);
+
+    // Third-person camera
+    var cx = playerMesh.position.x - Math.sin(exploreCamTheta) * Math.cos(exploreCamPhi) * exploreCamDist;
+    var cy = playerMesh.position.y + 1.0 + Math.sin(exploreCamPhi) * exploreCamDist;
+    var cz = playerMesh.position.z - Math.cos(exploreCamTheta) * Math.cos(exploreCamPhi) * exploreCamDist;
+
+    camera.position.set(cx, cy, cz);
+    camera.lookAt(
+      playerMesh.position.x,
+      playerMesh.position.y + 0.7,
+      playerMesh.position.z
+    );
+  }
+
   return {
     init: init,
     zoomToDistrict: zoomToDistrict,
@@ -3128,6 +3834,9 @@ var MedievalKingdom = (function () {
     hideBanners: hideBanners,
     resetToHome: resetToHome,
     resize: onResize,
+    enterExplore: enterExploreMode,
+    exitExplore: exitExploreMode,
+    isExploring: function () { return exploreActive; },
   };
 })();
 
@@ -3242,6 +3951,39 @@ var MedievalKingdom = (function () {
     enterGuildArea();
   });
 
+  document.getElementById("explore-btn").addEventListener("click", function (e) {
+    e.stopPropagation();
+    enterExploreMode();
+  });
+
+  function enterExploreMode() {
+    document.getElementById("landingPage").classList.add("hidden");
+    document.getElementById("realm-header").classList.add("hidden");
+    document.getElementById("landing-bottom-bar").style.opacity = "0";
+    document.getElementById("landing-bottom-bar").style.pointerEvents = "none";
+    document.getElementById("explore-hud").classList.remove("hidden");
+    document.getElementById("kill-counter").classList.remove("hidden");
+    document.getElementById("kill-num").textContent = "0";
+    document.getElementById("kill-pts").textContent = "0 pts";
+    MedievalKingdom.enterExplore();
+  }
+
+  function exitExploreFromUI() {
+    document.getElementById("explore-hud").classList.add("hidden");
+    document.getElementById("kill-counter").classList.add("hidden");
+    document.getElementById("landing-bottom-bar").style.opacity = "";
+    document.getElementById("landing-bottom-bar").style.pointerEvents = "";
+    document.getElementById("landingPage").classList.remove("hidden");
+    document.getElementById("realm-header").classList.remove("hidden");
+  }
+
+  // Poll for explore exit (ESC key handled inside MedievalKingdom)
+  setInterval(function () {
+    if (!MedievalKingdom.isExploring() && !document.getElementById("explore-hud").classList.contains("hidden")) {
+      exitExploreFromUI();
+    }
+  }, 200);
+
   document.getElementById("go-fullscreen").addEventListener("click", function () {
     if (document.fullscreenElement) document.exitFullscreen();
     else document.documentElement.requestFullscreen();
@@ -3256,6 +3998,7 @@ var MedievalKingdom = (function () {
 
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") {
+      if (MedievalKingdom.isExploring()) return;
       var overlay = document.getElementById("info-overlay");
       if (overlay.classList.contains("visible")) {
         hideInfoOverlay();
