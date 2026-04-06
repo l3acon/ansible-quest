@@ -1398,6 +1398,11 @@ html, body {
                     </div>
                     <div id="chest-success" style="display:none; margin-top:20px; text-align:center;">
                         <div id="chest-success-msg" style="font-family:'Cinzel',serif; font-size:20px; color:#88ff88; margin-bottom:10px;">✓ Chest Unlocked! +100 pts</div>
+                        <div id="chest-flag" style="display:none; margin:12px auto; padding:10px 18px; background:rgba(0,0,0,0.5); border:1px solid rgba(255,215,0,0.4); border-radius:6px; max-width:360px;">
+                            <div style="font-family:'MedievalSharp',cursive; font-size:11px; color:rgba(255,220,150,0.5); margin-bottom:4px;">Submit this flag to the Island Challenges:</div>
+                            <div id="chest-flag-code" style="font-family:'Courier New',monospace; font-size:18px; color:#ffd700; letter-spacing:2px; user-select:all; cursor:pointer;" title="Click to copy"></div>
+                            <div id="chest-flag-copied" style="font-family:'MedievalSharp',cursive; font-size:11px; color:#88ff88; margin-top:4px; opacity:0; transition:opacity 0.3s;">Copied!</div>
+                        </div>
                         <div id="chest-remaining" style="font-family:'MedievalSharp',cursive; font-size:14px; color:rgba(255,220,150,0.7); margin-bottom:16px;"></div>
                         <div class="quest-continue-btn" id="chest-continue-btn">Continue</div>
                     </div>
@@ -1759,16 +1764,16 @@ var MedievalKingdom = (function () {
   var _totalChests = 9;
 
   var chestToolMap = [
-    { id: "ansible-creator",    label: "ansible-creator",    district: "village",  key: "⚒️ The Blacksmith's Hammer — ansible-creator" },
-    { id: "ansible-lint",       label: "ansible-lint",       district: "village",  key: "🗡️ The Whetstone — ansible-lint" },
-    { id: "ade",                label: "ade",                district: "village",  key: "⚗️ The Alchemist's Mortar — ade" },
-    { id: "molecule",           label: "Molecule",           district: "township", key: "🔨 The War Mace — Molecule" },
-    { id: "pytest-ansible",     label: "pytest-ansible",     district: "township", key: "🏹 The Crossbow — pytest-ansible" },
-    { id: "tox-ansible",        label: "tox-ansible",        district: "township", key: "⚔️ The Battle Axe — tox-ansible" },
-    { id: "ansible-builder",    label: "ansible-builder",    district: "fortress", key: "🏰 The Siege Tower — ansible-builder" },
-    { id: "ansible-sign",       label: "ansible-sign",       district: "fortress", key: "🛡️ The Royal Seal — ansible-sign" },
-    { id: "ansible-navigator",  label: "ansible-navigator",  district: "fortress", key: "🧭 The Enchanted Compass — ansible-navigator" },
-  ];
+    { id: "ansible-creator",    label: "ansible-creator",    district: "village",  key: "⚒️ The Blacksmith's Hammer — ansible-creator",   flag: "QUEST-CREATOR-7x9k" },
+    { id: "ansible-lint",       label: "ansible-lint",       district: "village",  key: "🗡️ The Whetstone — ansible-lint",             flag: "QUEST-LINT-3m2p" },
+    { id: "ade",                label: "ade",                district: "village",  key: "⚗️ The Alchemist's Mortar — ade",                 flag: "QUEST-ADE-9f4w" },
+    { id: "molecule",           label: "Molecule",           district: "township", key: "🔨 The War Mace — Molecule",                       flag: "QUEST-MOLECULE-2j8r" },
+    { id: "pytest-ansible",     label: "pytest-ansible",     district: "township", key: "🏹 The Crossbow — pytest-ansible",                 flag: "QUEST-PYTEST-5n1v" },
+    { id: "tox-ansible",        label: "tox-ansible",        district: "township", key: "⚔️ The Battle Axe — tox-ansible",                 flag: "QUEST-TOX-6h3q" },
+    { id: "ansible-builder",    label: "ansible-builder",    district: "fortress", key: "🏰 The Siege Tower — ansible-builder",             flag: "QUEST-BUILDER-4c7t" },
+    { id: "ansible-sign",       label: "ansible-sign",       district: "fortress", key: "🛡️ The Royal Seal — ansible-sign",             flag: "QUEST-SIGN-8b5e" },
+    { id: "ansible-navigator",  label: "ansible-navigator",  district: "fortress", key: "🧭 The Enchanted Compass — ansible-navigator",     flag: "QUEST-NAVIGATOR-1d6s" },
+  ]
 
   var chestQuizData = {
     "ansible-creator": [
@@ -1941,6 +1946,8 @@ var MedievalKingdom = (function () {
     if (quizDiv) quizDiv.style.display = "none";
     if (resultEl) resultEl.textContent = "";
     document.getElementById("chest-success").style.display = "none";
+    document.getElementById("chest-flag").style.display = "none";
+    document.getElementById("chest-flag-copied").style.opacity = "0";
 
     document.getElementById("chest-overlay").classList.add("visible");
   }
@@ -1993,12 +2000,22 @@ var MedievalKingdom = (function () {
     var resultEl = document.getElementById("quiz-result");
     if (selected === correct) {
       resultEl.textContent = "";
+      var chestInfo = _chests[_activeChestIdx];
       collectChest(_activeChestIdx);
       document.getElementById("chest-quiz").style.display = "none";
       document.getElementById("chest-earn-btn").style.display = "none";
       var remaining = _totalChests - _chestsCollected;
       var successDiv = document.getElementById("chest-success");
       var remDiv = document.getElementById("chest-remaining");
+      var flagDiv = document.getElementById("chest-flag");
+      var flagCode = document.getElementById("chest-flag-code");
+      var tool = chestToolMap.filter(function(t){ return t.id === chestInfo.toolId; })[0];
+      if (tool && tool.flag) {
+        flagCode.textContent = tool.flag;
+        flagDiv.style.display = "";
+      } else {
+        flagDiv.style.display = "none";
+      }
       successDiv.style.display = "";
       if (remaining > 0) {
         remDiv.textContent = remaining + " chest" + (remaining === 1 ? "" : "s") + " remaining — keep exploring!";
@@ -2058,6 +2075,21 @@ var MedievalKingdom = (function () {
     _activeChestIdx = -1;
     _chestQuizActive = false;
   }
+
+  (function() {
+    var flagCode = document.getElementById("chest-flag-code");
+    if (flagCode) {
+      flagCode.addEventListener("click", function() {
+        var text = flagCode.textContent;
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(text).then(function() {
+            var el = document.getElementById("chest-flag-copied");
+            if (el) { el.style.opacity = "1"; setTimeout(function(){ el.style.opacity = "0"; }, 1500); }
+          });
+        }
+      });
+    }
+  })();
 
   var _treeIMs = {};
   function addTrees() {
